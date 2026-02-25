@@ -1,0 +1,218 @@
+{% extends 'basketball/base_basket.html' %}
+{% load static %}
+
+{% block basket_content %}
+<div class="container-fluid px-4 py-4">
+    
+    <div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom">
+        <div>
+            <h1 class="fw-bold h3 mb-0">Catalogue Basketball</h1>
+            <span class="badge rounded-pill bg-dark-subtle text-dark">{{ collection_cards.paginator.count }} Items</span>
+        </div>
+        <div class="text-muted small">Affichage : 20 par page</div>
+    </div>
+
+    <div class="card border-0 shadow-sm rounded-4 mb-5 overflow-hidden">
+        <div class="card-body p-4 bg-white">
+            <form method="GET" id="filter-form" class="row g-3">
+                <div class="col-md-3">
+                    <label class="filter-label">Rechercher</label>
+                    <input type="text" name="q" value="{{ request.GET.q|default:'' }}" class="apple-filter" placeholder="Joueur (Name 1-12)...">
+                </div>
+                <div class="col-md-2">
+                    <label class="filter-label">Saison</label>
+                    <select name="v_season" class="apple-filter">
+                        <option value="">Toutes</option>
+                        {% for s in seasons %}<option value="{{ s }}" {% if request.GET.v_season == s %}selected{% endif %}>{{ s }}</option>{% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="filter-label">Marque</label>
+                    <select name="v_brand" class="apple-filter">
+                        <option value="">Toutes</option>
+                        {% for m in marques %}<option value="{{ m }}" {% if request.GET.v_brand == m %}selected{% endif %}>{{ m }}</option>{% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="filter-label">Produit / Licence</label>
+                    <select name="v_produit" class="apple-filter">
+                        <option value="">Tous les produits</option>
+                        {% for p in produits %}
+                            <option value="{{ p }}" {% if request.GET.v_produit == p %}selected{% endif %}>{{ p }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="filter-label">Rookie Card</label>
+                    <select name="v_rc" class="apple-filter">
+                        <option value="">Tous</option>
+                        <option value="1" {% if request.GET.v_rc == "1" %}selected{% endif %}>Oui (RC)</option>
+                        <option value="0" {% if request.GET.v_rc == "0" %}selected{% endif %}>Non</option>
+                    </select>
+                </div>
+
+                <div class="col-md-3">
+                    <label class="filter-label">Équipe (Teams 1-12)</label>
+                    <select name="v_team" class="apple-filter">
+                        <option value="">Toutes les équipes</option>
+                        {% for t in teams %}<option value="{{ t }}" {% if request.GET.v_team == t %}selected{% endif %}>{{ t }}</option>{% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="filter-label">Parallèle / Rareté</label>
+                    <select name="v_parallel" class="apple-filter">
+                        <option value="">Tous</option>
+                        {% for p in parallels %}<option value="{{ p }}" {% if request.GET.v_parallel == p %}selected{% endif %}>{{ p }}</option>{% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="filter-label">Type de carte</label>
+                    <select name="v_type_card" class="apple-filter">
+                        <option value="">Tous les types</option>
+                        {% for tc in type_cards %}
+                            <option value="{{ tc }}" {% if request.GET.v_type_card == tc %}selected{% endif %}>{{ tc }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="filter-label">Catégorie</label>
+                    <select name="v_cat" class="apple-filter">
+                        <option value="">Toutes les catégories</option>
+                        {% for c in categories %}<option value="{{ c }}" {% if request.GET.v_cat == c %}selected{% endif %}>{{ c }}</option>{% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-2 d-flex align-items-end">
+                    <button type="submit" class="btn btn-dark w-100 rounded-3 fw-bold">Filtrer</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="catalog-grid">
+    {% for card in collection_cards %}
+    <div class="catalog-card">
+        
+        <div class="card-thumb-wrapper">
+    {% if card.recto_img %}
+        <img src="/{{ card.recto_img }}.jpg" 
+             class="card-img-thumb" 
+             alt="{{ card.name }}"
+             onerror="this.onerror=null; this.src='{% static 'basketball/images/placeholder_card.png' %}';">
+    {% else %}
+        <img src="{% static 'basketball/images/placeholder_card.png' %}" 
+             class="card-img-thumb" 
+             alt="En attente d'image">
+    {% endif %}
+    
+    {% if card.RC == 1 or card.RC == "1" %}
+        <span class="badge-rc">RC</span>
+    {% endif %}
+</div>
+
+        <div class="card-content-wrapper">
+            <div class="info-side">
+    <div class="product-name">{{ card.produit }}</div>
+
+    <div class="player-row">
+        <span class="player-name">{{ card.name }}</span>
+        {% if card.RC == 1 or card.RC == "1" %}
+            <span class="mini-badge-rc">RC</span>
+        {% endif %}
+    </div>
+
+    <div class="meta-row">
+        <span class="card-type">{{ card.type_card }}</span>
+        <span class="card-num">#{{ card.numero_card }}</span>
+    </div>
+
+    <div class="rarity-row">
+        <span class="parallel-name">{{ card.parrallel }}</span>
+        {% if card.numerotation_card %}
+            <span class="serial-tag">/{{ card.numerotation_card }}</span>
+        {% endif %}
+    </div>
+</div>
+
+            <div class="action-side">
+                <button type="button" class="btn-action btn-wishlist">
+                    <i class="bi bi-heart"></i>
+                </button>
+
+                <button type="button" class="btn-action btn-transit">
+                    <i class="bi bi-truck"></i>
+                </button>
+
+                <div class="qty-container" data-card-id="{{ card.pk }}">
+    {% if card.qty_in_collection > 0 %}
+        <div class="qty-control-horizontal">
+            <span class="qty-val">{{ card.qty_in_collection }}</span>
+            
+            <div class="qty-actions">
+                <button type="button" onclick="updateQty('{{ card.pk }}', 1)" class="qty-btn plus">
+                    <i class="bi bi-chevron-up"></i>
+                </button>
+                <button type="button" onclick="updateQty('{{ card.pk }}', -1)" class="qty-btn minus">
+                    <i class="bi bi-chevron-down"></i>
+                </button>
+            </div>
+        </div>
+    {% else %}
+        <button type="button" class="btn-action-full btn-collection add-card-btn" data-card-id="{{ card.pk }}">
+            <i class="bi bi-plus-lg"></i>
+        </button>
+    {% endif %}
+</div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+                
+    </div> <nav aria-label="Page navigation" class="mt-5 mb-5">
+        <ul class="pagination justify-content-center">
+            {% if collection_cards.has_previous %}
+                <li class="page-item">
+                    <a class="page-link border-0 rounded-3 shadow-sm mx-1 text-dark" 
+                       href="?page=1{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
+                       &laquo; Début
+                    </a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link border-0 rounded-3 shadow-sm mx-1 text-dark" 
+                       href="?page={{ collection_cards.previous_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
+                       Précédent
+                    </a>
+                </li>
+            {% endif %}
+
+            <li class="page-item disabled">
+                <span class="page-link border-0 rounded-3 shadow-sm mx-1 bg-dark text-white fw-bold">
+                    Page {{ collection_cards.number }} sur {{ collection_cards.paginator.num_pages }}
+                </span>
+            </li>
+
+            {% if collection_cards.has_next %}
+                <li class="page-item">
+                    <a class="page-link border-0 rounded-3 shadow-sm mx-1 text-dark" 
+                       href="?page={{ collection_cards.next_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
+                       Suivant
+                    </a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link border-0 rounded-3 shadow-sm mx-1 text-dark" 
+                       href="?page={{ collection_cards.paginator.num_pages }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
+                       Fin &raquo;
+                    </a>
+                </li>
+            {% endif %}
+        </ul>
+    </nav>
+</div> 
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="{% static 'basketball/js/basketball.js' %}"></script>
+
+
+{% endblock %}

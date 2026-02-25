@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'base.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="modern-wrapper">
+    <div class="modern-card">
+        <div class="modern-header">
+            <h2>Inscription</h2>
+            <p>Créez votre compte de collectionneur</p>
+        </div>
+        
+        <form method="POST">
+            {% csrf_token %}
+            <div class="form-fields">
+                {{ form.as_p }}
+            </div>
+            <button type="submit" class="btn-modern">S'inscrire</button>
+        </form>
+
+        <div class="modern-footer">
+            <span>Déjà inscrit ?</span> <a href="{% url 'login' %}">Se connecter</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

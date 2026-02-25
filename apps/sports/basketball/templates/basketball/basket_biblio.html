@@ -1,0 +1,604 @@
+{% extends 'basketball/base_basket.html' %}
+{% load static %}
+{% load dict_extras %}
+
+{% block basket_content %}
+<style>
+    :root { 
+        --unit: 100px;
+        --grid-unit: 20px; /* Taille fixe d'une unité de grille */
+        --shelf-wood: #4e342e; 
+        --shelf-dark: #1a120b; 
+        --board: calc(0.1 * var(--unit)); 
+        --grid-line: rgba(255, 255, 255, 0.08);
+    }
+    
+    /* Vue Grille Spécifique */
+    .grid-view-container {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+        gap: 20px;
+        padding: 20px 0;
+    }
+
+    .library-grid-card {
+        height: 180px;
+        border-radius: 20px;
+        background: rgba(135, 206, 250, 0.3);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.5);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        transition: transform 0.3s ease;
+        cursor: pointer;
+        text-decoration: none;
+        color: #2c3e50;
+        position: relative;
+    }
+
+    .library-grid-card:hover {
+        transform: translateY(-10px);
+        background: rgba(135, 206, 250, 0.5);
+    }
+
+    .library-grid-card .lib-num {
+        font-size: 3rem;
+        font-weight: 800;
+        opacity: 0.2;
+        position: absolute;
+    }
+
+    .library-grid-card .lib-name {
+        font-size: 1.2rem;
+        font-weight: bold;
+        z-index: 1;
+        text-transform: uppercase;
+    }
+
+    /* Styles de la Bibliothèque */
+    .library-group { margin-bottom: 80px; }
+    
+    .library-wall { 
+        background: var(--shelf-dark); 
+        /* Encadrement : Planche en haut, à gauche et à droite */
+        border-top: var(--board) solid var(--shelf-wood);
+        border-left: var(--board) solid var(--shelf-wood);
+        border-right: var(--board) solid var(--shelf-wood);
+        padding: 0; 
+        border-radius: 5px 5px 0 0; 
+        display: flex;
+        flex-direction: column;
+        overflow-x: auto;
+        gap: 0; /* Aucune marge entre les étages */
+    }
+    
+    .shelf-row {
+        position: relative; 
+        display: grid;
+        /* X : Colonnes de 20px */
+        grid-template-columns: repeat(var(--cols, 50), var(--grid-unit)); 
+        /* Y : Lignes de 20px */
+        grid-template-rows: repeat(var(--rows, 15), var(--grid-unit));
+        
+        /* INDISPENSABLE : Empêche le placement automatique "l'un après l'autre" */
+        grid-auto-flow: initial; 
+        /* Aligne le contenu en haut pour que Row 1 soit le haut de l'étagère */
+        align-content: start;
+        
+        padding: 0; 
+        /* Planche horizontale sous chaque étage */
+        border-bottom: var(--board) solid var(--shelf-wood);
+        margin-bottom: 0; /* Suppression de la marge de 20px pour coller les planches */
+        transition: background 0.3s ease;
+        width: fit-content;
+        min-width: 100%;
+        /* Hauteur réelle calculée + box-sizing pour que la planche s'ajoute */
+        height: calc(var(--rows) * var(--grid-unit));
+        box-sizing: content-box;
+    }
+    
+    .shelf-row:last-child { margin-bottom: 0; }
+    
+    /* Grille horizontale et verticale en mode édition */
+    .edit-mode-active .shelf-row {
+        background-image: 
+            linear-gradient(to right, var(--grid-line) 1px, transparent 1px),
+            linear-gradient(to bottom, var(--grid-line) 1px, transparent 1px);
+        background-size: var(--grid-unit) var(--grid-unit);
+    }
+
+    /* Contrôles d'étage */
+    .shelf-controls-overlay {
+        position: absolute;
+        top: 5px;
+        left: 5px;
+        z-index: 1000;
+        display: flex;
+        gap: 5px;
+        background: rgba(0,0,0,0.5);
+        padding: 3px;
+        border-radius: 5px;
+    }
+    .shelf-size-selector {
+        width: 60px !important;
+        font-size: 0.7rem !important;
+        padding: 2px !important;
+        background: rgba(255,255,255,0.9) !important;
+        border: 1px solid var(--shelf-wood) !important;
+    }
+    .btn-width-ctrl {
+        padding: 0 8px;
+        font-size: 0.7rem;
+        background: #4a90e2;
+        color: white;
+        border: none;
+        border-radius: 3px;
+        font-weight: bold;
+    }
+    .btn-remove-shelf {
+        padding: 0 6px;
+        font-size: 0.8rem;
+        background: rgba(220, 53, 69, 0.8);
+        color: white;
+        border: none;
+        border-radius: 3px;
+    }
+
+    .add-shelf-btn-container {
+        background: var(--shelf-wood);
+        border-top: 1px solid rgba(255,255,255,0.1);
+    }
+    .btn-add-shelf {
+        width: 100%;
+        background: transparent;
+        color: rgba(255,255,255,0.7);
+        border: none;
+        padding: 8px;
+        font-size: 0.9rem;
+        transition: all 0.2s;
+    }
+    .btn-add-shelf:hover { color: white; background: rgba(255,255,255,0.1); }
+
+    .library-floor {
+        height: var(--board); /* Taille d'une planche */
+        background: var(--shelf-wood);
+        width: 100%;
+        border-radius: 0 0 5px 5px;
+        box-shadow: 0 10px 20px rgba(0,0,0,0.4);
+        /* On retire la bordure top pour ne pas doubler avec la dernière planche d'étage */
+    }
+    
+    /* Hauteurs d'étages basées sur les unités de grille */
+    .size-sm { --rows: 6; }
+    .size-md { --rows: 9; }
+    .size-lg { --rows: 12; }
+    .size-xl { --rows: 15; }
+
+    .binder-item {
+        cursor: pointer;
+        position: relative; 
+        transition: transform 0.2s;
+        z-index: 2;
+        
+        /* Placement LIBRE sur la grille via les variables JS */
+        grid-column-start: var(--col-start, 1);
+        grid-row-start: var(--row-start, 1);
+        
+        /* Taille de l'objet */
+        grid-column-end: span var(--w, 5);
+        grid-row-end: span var(--h, 15);
+        
+        margin: 0; /* Suppression totale des marges pour toucher les planches */
+    }
+    
+    /* Définition des tailles en unités de grille */
+    .binder-small  { --w: 2; --h: 6; }
+    .binder-medium { --w: 2; --h: 9; }
+    .binder-large  { --w: 2; --h: 12; }
+    .binder-extra  { --w: 2; --h: 15; }
+    
+    .binder-spine { 
+        width: 100%; height: 100%; border-radius: 2px; 
+        box-shadow: 2px 0 5px rgba(0,0,0,0.3);
+        display: flex; align-items: center; justify-content: center;
+        background-image: linear-gradient(90deg, rgba(0,0,0,0.1) 0%, rgba(255,255,255,0.05) 50%, rgba(0,0,0,0.1) 100%);
+    }
+    .binder-title {
+        color: white; font-size: 11px; font-weight: bold;
+        writing-mode: vertical-rl;
+        text-transform: uppercase; letter-spacing: 1px;
+        text-shadow: 1px 1px 2px rgba(0,0,0,0.6);
+        white-space: nowrap;
+        pointer-events: none;
+    }
+
+    #create-library-overlay {
+        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+        background: rgba(0,0,0,0.7); z-index: 10000;
+        display: none; align-items: center; justify-content: center;
+        backdrop-filter: blur(5px);
+    }
+    .modal-card { background: white; padding: 30px; border-radius: 20px; width: 450px; }
+</style>
+
+<div class="container-fluid py-4" id="main-container">
+    
+    <div class="apple-card p-3 mb-4 d-flex align-items-center justify-content-between shadow-sm">
+        <h4 class="fw-bold m-0">Ma Collection <span class="text-primary">Bibliothèque</span></h4>
+        <div class="d-flex gap-2">
+            <div class="btn-group me-2">
+                <button class="btn btn-outline-dark active" id="view-real-btn" onclick="switchView('real')">Vue Réelle</button>
+                <button class="btn btn-outline-dark" id="view-grid-btn" onclick="switchView('grid')">Vue Grille</button>
+            </div>
+            <button class="btn btn-outline-primary rounded-pill" onclick="showCreateLibraryForm()">
+                <i class="bi bi-folder-plus me-2"></i>Nouvelle Biblio
+            </button>
+            <button class="btn btn-primary rounded-pill" onclick="toggleAddForm()">
+                <i class="bi bi-plus-lg me-2"></i>Nouveau Classeur
+            </button>
+            <button class="btn btn-outline-dark rounded-pill" onclick="toggleEditMode()" id="edit-btn">
+                <i class="bi bi-pencil-square me-2"></i>Modifier
+            </button>
+            <button class="btn btn-success rounded-pill d-none" id="save-btn" onclick="saveAllLibraries()">
+                <i class="bi bi-check-lg me-2"></i>Enregistrer
+            </button>
+        </div>
+    </div>
+
+    <div id="add-binder-form" class="apple-card p-3 mb-4 d-none border-success shadow-sm">
+        <h6 class="fw-bold text-success mb-3 text-uppercase">Configuration du Classeur</h6>
+        <form action="{% url 'add_binder' %}" method="POST" class="row g-3">
+            {% csrf_token %}
+            <div class="col-md-3">
+                <label class="small fw-bold">Destination</label>
+                <select name="library_id" class="form-select" required>
+                    {% for data in libraries_data %}
+                        <option value="{{ data.instance.id }}">{{ data.instance.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="small fw-bold">Nom / Titre</label>
+                <input type="text" name="name" class="form-control" required>
+            </div>
+            <div class="col-md-2">
+                <label class="small fw-bold">Étage n°</label>
+                <input type="number" name="shelf_number" class="form-control" value="1" min="1">
+            </div>
+            <div class="col-md-2">
+                <label class="small fw-bold">Format Pages</label>
+                <select name="storage_type" class="form-select">
+                    <option value="small">2x2 (4 cartes)</option>
+                    <option value="medium" selected>3x3 (9 cartes)</option>
+                    <option value="large">4x4 (16 cartes)</option>
+                    <option value="extra">6x5 (30 cartes)</option>
+                </select>
+            </div>
+            <div class="col-md-1">
+                <label class="small fw-bold">Couleur</label>
+                <input type="color" name="color" class="form-control form-control-color w-100" value="#4A90E2">
+            </div>
+            <div class="col-md-2 d-flex align-items-end">
+                <button type="submit" class="btn btn-success w-100 rounded-pill">Ajouter au meuble</button>
+            </div>
+        </form>
+    </div>
+
+    {% if not libraries_data %}
+        <div class="text-center py-5">
+            <div class="apple-card p-5 shadow-sm d-inline-block">
+                <i class="bi bi-bookshelf display-1 text-secondary mb-3"></i>
+                <h3 class="fw-bold">Aucune Bibliothèque</h3>
+                <p class="text-muted">Commencez par créer votre premier meuble de rangement.</p>
+                <button onclick="showCreateLibraryForm()" class="btn btn-primary btn-lg rounded-pill px-5">Créer Maintenant</button>
+            </div>
+        </div>
+    {% else %}
+        
+        <div id="view-real">
+            {% for data in libraries_data %}
+            <div class="library-group" id="lib-container-{{ data.instance.id }}" data-lib-id="{{ data.instance.id }}">
+                <div class="d-flex align-items-center justify-content-between mb-3 px-2">
+                    <h5 class="fw-bold text-uppercase text-secondary m-0">{{ data.instance.name }}</h5>
+                    <form action="{% url 'delete_library' %}" method="POST" onsubmit="return confirm('Supprimer définitivement ce meuble ?');">
+                        {% csrf_token %}
+                        <input type="hidden" name="library_id" value="{{ data.instance.id }}">
+                        <button type="submit" class="btn btn-link text-danger p-0"><i class="bi bi-trash"></i></button>
+                    </form>
+                </div>
+
+                <div class="library-wall position-relative">
+                    {% for i in data.shelves_range %}
+                    {% with i_str=i|stringformat:'s' %}
+                    {% with current_width=data.shelf_widths|get_item:i_str|default:50 %}
+                    <div class="shelf-row {{ data.shelf_sizes|get_item:i_str|default:'size-md' }}" 
+                         id="shelf-{{ data.instance.id }}-{{ i }}" 
+                         data-shelf-num="{{ i }}"
+                         style="--cols: {{ current_width }};"
+                         ondragover="allowDrop(event)" ondrop="drop(event)">
+                        
+                        <div class="shelf-controls-overlay d-none edit-mode-ui">
+                            <select class="form-select form-select-sm shelf-size-selector" 
+                                    onchange="updateShelfPreview('{{ data.instance.id }}', '{{ i }}', this.value)">
+                                <option value="size-sm" {% if data.shelf_sizes|get_item:i_str == 'size-sm' %}selected{% endif %}>S</option>
+                                <option value="size-md" {% if data.shelf_sizes|get_item:i_str == 'size-md' or not data.shelf_sizes|get_item:i_str %}selected{% endif %}>M</option>
+                                <option value="size-lg" {% if data.shelf_sizes|get_item:i_str == 'size-lg' %}selected{% endif %}>L</option>
+                                <option value="size-xl" {% if data.shelf_sizes|get_item:i_str == 'size-xl' %}selected{% endif %}>XL</option>
+                            </select>
+                            <button class="btn-width-ctrl" onclick="updateShelfWidth('{{ data.instance.id }}', '{{ i }}', -10)">-10</button>
+                            <button class="btn-width-ctrl" onclick="updateShelfWidth('{{ data.instance.id }}', '{{ i }}', 10)">+10</button>
+                            
+                            <button class="btn-remove-shelf" onclick="removeShelf('{{ data.instance.id }}', '{{ i }}')">
+                                <i class="bi bi-x"></i>
+                            </button>
+                        </div>
+
+                        {% with shelf_content=data.shelves|get_item:i_str %}
+                            {% for binder in shelf_content %}
+                            <div class="binder-item binder-{{ binder.storage_type }}" 
+                                 draggable="true" ondragstart="drag(event)" id="binder-{{ binder.id }}" 
+                                 data-id="{{ binder.id }}"
+                                 data-col="{{ binder.column_position }}"
+                                 data-row="{{ binder.row_position|default:1 }}"
+                                 style="--col-start: {{ binder.column_position }}; --row-start: {{ binder.row_position|default:1 }};"
+                                 onclick="if(!isEditMode) window.location.href='?binder_id={{ binder.id }}'">
+                                <div class="binder-spine" style="background-color: {{ binder.color }};">
+                                    <span class="binder-title">{{ binder.abbreviation|default:binder.name }}</span>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        {% endwith %}
+                    </div>
+                    {% endwith %}
+                    {% endwith %}
+                    {% endfor %}
+                </div>
+                <div class="add-shelf-btn-container d-none edit-mode-ui">
+                    <button class="btn-add-shelf" onclick="addShelfToExistingLib('{{ data.instance.id }}')">
+                        <i class="bi bi-plus-circle-fill me-2"></i>Ajouter un étage
+                    </button>
+                </div>
+                <div class="library-floor"></div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <div id="view-grid" class="d-none">
+            <div class="grid-view-container">
+                {% for data in libraries_data %}
+                <a href="#lib-container-{{ data.instance.id }}" class="library-grid-card" onclick="switchView('real')">
+                    <span class="lib-num">{{ forloop.counter }}</span>
+                    <span class="lib-name">{{ data.instance.name }}</span>
+                    <span class="small text-muted">{{ data.instance.shelf_count }} Étages</span>
+                </a>
+                {% endfor %}
+            </div>
+        </div>
+
+    {% endif %}
+
+    <div id="create-library-overlay">
+        <div class="modal-card">
+            <h4 class="fw-bold mb-4">Nouvelle Bibliothèque</h4>
+            <form action="{% url 'create_library' %}" method="POST">
+                {% csrf_token %}
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Nom de l'espace</label>
+                    <input type="text" name="name" class="form-control" placeholder="Ex: Salon, Bureau..." required>
+                </div>
+                <div id="shelves-config-container">
+                    <label class="form-label fw-bold">Configuration des étages</label>
+                    <div class="row g-2 mb-2 align-items-center shelf-config-row">
+                        <div class="col-2"><span class="badge bg-secondary">Étage 1</span></div>
+                        <div class="col-10">
+                            <select name="shelf_size_1" class="form-select form-select-sm">
+                                <option value="size-sm">Petit</option>
+                                <option value="size-md" selected>Standard</option>
+                                <option value="size-lg">Grand</option>
+                                <option value="size-xl">Extra</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <button type="button" class="btn btn-sm btn-outline-primary w-100 mb-4" onclick="addNewShelfInput()">
+                    <i class="bi bi-plus"></i> Ajouter un étage
+                </button>
+                <div class="d-flex gap-2 mt-4">
+                    <button type="button" class="btn btn-light flex-grow-1" onclick="document.getElementById('create-library-overlay').style.display='none'">Annuler</button>
+                    <button type="submit" class="btn btn-primary flex-grow-1">Créer la bibliothèque</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    let isEditMode = false;
+    let shelfCounter = 1;
+    const GRID_SIZE = 20; // Doit correspondre à --grid-unit
+
+    function switchView(view) {
+        const real = document.getElementById('view-real');
+        const grid = document.getElementById('view-grid');
+        const btnReal = document.getElementById('view-real-btn');
+        const btnGrid = document.getElementById('view-grid-btn');
+        if(view === 'real') {
+            real.classList.remove('d-none'); grid.classList.add('d-none');
+            btnReal.classList.add('active'); btnGrid.classList.remove('active');
+        } else {
+            real.classList.add('d-none'); grid.classList.remove('d-none');
+            btnReal.classList.remove('active'); btnGrid.classList.add('active');
+        }
+    }
+
+    function showCreateLibraryForm() { document.getElementById('create-library-overlay').style.display = 'flex'; }
+    function toggleAddForm() { document.getElementById('add-binder-form').classList.toggle('d-none'); }
+
+    function addNewShelfInput() {
+        shelfCounter++;
+        const container = document.getElementById('shelves-config-container');
+        const div = document.createElement('div');
+        div.className = 'row g-2 mb-2 align-items-center shelf-config-row';
+        div.innerHTML = `
+            <div class="col-2"><span class="badge bg-secondary">Étage ${shelfCounter}</span></div>
+            <div class="col-10">
+                <select name="shelf_size_${shelfCounter}" class="form-select form-select-sm">
+                    <option value="size-sm">Petit</option>
+                    <option value="size-md" selected>Standard</option>
+                    <option value="size-lg">Grand</option>
+                    <option value="size-xl">Extra</option>
+                </select>
+            </div>`;
+        container.appendChild(div);
+    }
+
+    function toggleEditMode() {
+        isEditMode = !isEditMode;
+        const container = document.getElementById('main-container');
+        const saveBtn = document.getElementById('save-btn');
+        const editBtn = document.getElementById('edit-btn');
+        const editUIs = document.querySelectorAll('.edit-mode-ui');
+
+        container.classList.toggle('edit-mode-active');
+        saveBtn.classList.toggle('d-none');
+        editUIs.forEach(ui => ui.classList.toggle('d-none'));
+
+        editBtn.innerHTML = isEditMode ? '<i class="bi bi-x-circle me-2"></i>Annuler' : '<i class="bi bi-pencil-square me-2"></i>Modifier';
+    }
+
+    function updateShelfPreview(libId, shelfNum, sizeClass) {
+        const shelf = document.getElementById(`shelf-${libId}-${shelfNum}`);
+        shelf.classList.remove('size-sm', 'size-md', 'size-lg', 'size-xl');
+        shelf.classList.add(sizeClass);
+    }
+
+    function updateShelfWidth(libId, shelfNum, change) {
+        const shelf = document.getElementById(`shelf-${libId}-${shelfNum}`);
+        let currentCols = parseInt(shelf.style.getPropertyValue('--cols')) || 50;
+        let newCols = Math.max(20, currentCols + change);
+        shelf.style.setProperty('--cols', newCols);
+    }
+
+    function addShelfToExistingLib(libId) {
+        const wall = document.querySelector(`#lib-container-${libId} .library-wall`);
+        const nextNum = wall.querySelectorAll('.shelf-row').length + 1;
+        const div = document.createElement('div');
+        div.className = 'shelf-row size-md';
+        div.id = `shelf-${libId}-${nextNum}`;
+        div.dataset.shelfNum = nextNum;
+        div.style.setProperty('--cols', 50);
+        div.setAttribute('ondragover', 'allowDrop(event)');
+        div.setAttribute('ondrop', 'drop(event)');
+        div.innerHTML = `
+            <div class="shelf-controls-overlay edit-mode-ui">
+                <select class="form-select form-select-sm shelf-size-selector" onchange="updateShelfPreview('${libId}', '${nextNum}', this.value)">
+                    <option value="size-sm">S</option><option value="size-md" selected>M</option><option value="size-lg">L</option><option value="size-xl">XL</option>
+                </select>
+                <button class="btn-width-ctrl" onclick="updateShelfWidth('${libId}', '${nextNum}', -10)">-10</button>
+                <button class="btn-width-ctrl" onclick="updateShelfWidth('${libId}', '${nextNum}', 10)">+10</button>
+                <button class="btn-remove-shelf" onclick="removeShelf('${libId}', '${nextNum}')"><i class="bi bi-x"></i></button>
+            </div>`;
+        wall.appendChild(div);
+    }
+
+    function removeShelf(libId, shelfNum) {
+        const shelf = document.getElementById(`shelf-${libId}-${shelfNum}`);
+        if(shelf.querySelectorAll('.binder-item').length > 0) {
+            alert("Videz d'abord l'étage !");
+            return;
+        }
+        shelf.remove();
+    }
+
+    function drag(ev) { if(!isEditMode) return; ev.dataTransfer.setData("text", ev.target.id); ev.target.classList.add('dragging'); }
+    function allowDrop(ev) { ev.preventDefault(); }
+
+    function drop(ev) {
+    ev.preventDefault();
+    const data = ev.dataTransfer.getData("text");
+    const dragged = document.getElementById(data);
+    // On cherche l'étage (shelf-row), même si on lâche sur un autre classeur
+    const targetRow = ev.target.closest('.shelf-row');
+    
+    // Assure-toi que GRID_SIZE est accessible ici
+    const GRID_SIZE = 20; 
+    
+    if (targetRow && dragged && isEditMode) {
+        dragged.classList.remove('dragging');
+        const rect = targetRow.getBoundingClientRect();
+        
+        // 1. Calcul de la position relative (ajustée pour centrer un peu le drop)
+        const x = ev.clientX - rect.left;
+        const y = ev.clientY - rect.top;
+        
+        // 2. Conversion en unités de grille (Math.floor + 1 pour index 1-based)
+        let col = Math.floor(x / GRID_SIZE) + 1;
+        let row = Math.floor(y / GRID_SIZE) + 1;
+        
+        // 3. Récupération des dimensions (Lecture directe des variables CSS)
+        const style = window.getComputedStyle(dragged);
+        const w = parseInt(style.getPropertyValue('--w')) || 5;
+        const h = parseInt(style.getPropertyValue('--h')) || 9;
+        
+        // 4. Récupération des limites de l'étage
+        const shelfStyle = window.getComputedStyle(targetRow);
+        const maxCols = parseInt(targetRow.style.getPropertyValue('--cols')) || 50;
+        const maxRows = parseInt(shelfStyle.getPropertyValue('--rows')) || 15;
+        
+        // 5. Contraintes (Bornes) pour ne pas sortir de l'étage
+        col = Math.max(1, Math.min(col, maxCols - w + 1));
+        row = Math.max(1, Math.min(row, maxRows - h + 1));
+        
+        // 6. Application immédiate du style
+        // On force l'écriture dans l'attribut style pour écraser le CSS de base
+        dragged.style.setProperty('--col-start', col);
+        dragged.style.setProperty('--row-start', row);
+        
+        // 7. Mise à jour des datasets pour Django
+        dragged.dataset.col = col;
+        dragged.dataset.row = row;
+        
+        targetRow.appendChild(dragged);
+        
+        console.log(`Placé en X:${col} Y:${row}`); // Pour tes tests en console
+    }
+    }
+
+    function saveAllLibraries() {
+        const payload = { libraries: [] };
+        document.querySelectorAll('.library-group').forEach(group => {
+            const libId = group.dataset.libId;
+            const libConfig = { id: libId, shelf_sizes: {}, shelf_widths: {}, binders: [] };
+            
+            group.querySelectorAll('.shelf-row').forEach((row, index) => {
+                const newNum = index + 1;
+                const size = Array.from(row.classList).find(c => c.startsWith('size-')) || 'size-md';
+                const width = parseInt(row.style.getPropertyValue('--cols')) || 50;
+                
+                libConfig.shelf_sizes[newNum] = size;
+                libConfig.shelf_widths[newNum] = width;
+                
+                row.querySelectorAll('.binder-item').forEach(binder => {
+                    libConfig.binders.push({
+                        id: binder.dataset.id,
+                        shelf: newNum,
+                        column: parseInt(binder.dataset.col),
+                        row: parseInt(binder.dataset.row || 1) // Nouvelle donnée Row
+                    });
+                });
+            });
+            payload.libraries.push(libConfig);
+        });
+
+        fetch("{% url 'save_library_config' %}", {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token }}' },
+            body: JSON.stringify(payload)
+        })
+        .then(res => res.json())
+        .then(data => { if(data.status === 'success') { alert("Rangement enregistré !"); location.reload(); } });
+    }
+</script>
+{% endblock %}

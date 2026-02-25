@@ -1,0 +1,343 @@
+/* 1. Le fond Kaki de la sidebar *//* 1. Base de la Sidebar */
+#sidebar-wrapper {
+    background-color: #4B5320 !important;
+    min-width: 260px;
+    min-height: 100vh;
+    border-right: 1px solid #383e18;
+    color: white;
+    display: flex;
+    flex-direction: column;
+}
+
+/* 2. Titre Principal (Compacté) */
+.sidebar-heading {
+    padding: 1.2rem 1rem 0.5rem 1rem !important; /* Réduit le padding haut et bas */
+    color: #ffffff !important;
+    font-family: 'Segoe UI', sans-serif;
+    font-weight: 800 !important;
+    text-transform: uppercase;
+    letter-spacing: 3px;
+    text-align: center;
+    font-size: 1.1rem !important;
+    margin-bottom: 0.2rem !important; /* Espace minimal sous le texte */
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+}
+
+/* 3. Bouton Premium (Positionnement resserré) */
+.px-3.mb-4 {
+    margin-bottom: 0.8rem !important; /* Contrôle l'espace sous le bouton */
+}
+
+.btn-premium {
+    background: linear-gradient(45deg, #B8860B, #FFD700) !important;
+    color: #283618 !important;
+    font-weight: 800 !important;
+    text-transform: uppercase;
+    font-size: 0.7rem;
+    letter-spacing: 1.5px;
+    border: none !important;
+    border-radius: 8px !important;
+    padding: 8px !important;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+}
+
+.btn-premium:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 15px rgba(255, 215, 0, 0.3);
+}
+
+/* 4. Titres des sections (Alignement 20px) */
+.sidebar-title {
+    color: rgba(255, 255, 255, 0.8) !important;
+    font-family: sans-serif !important;
+    font-size: 0.75rem;
+    font-weight: 700;
+    padding: 10px 0 5px 20px !important; /* Moins d'espace en haut */
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+/* 5. Liens et Icônes */
+#sidebar-wrapper .list-group-item {
+    background-color: transparent !important;
+    color: #FEFAE0 !important;
+    border: none !important;
+    padding-left: 20px !important;
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    transition: 0.2s;
+}
+
+#sidebar-wrapper .list-group-item i {
+    margin-right: 12px;
+    width: 20px;
+    text-align: center;
+    font-size: 0.85rem;
+    color: #A3AD73;
+}
+
+#sidebar-wrapper .list-group-item-action:hover {
+    background-color: rgba(255, 255, 255, 0.1) !important;
+    color: #ffffff !important;
+    padding-left: 25px !important;
+}
+
+
+
+
+
+/* ==========================================================
+   PAGE : MA COLLECTION PERSONNELLE
+   ========================================================== */
+
+/* 1. Titre principal de la page */
+.collection-main-title {
+    color: #283618;
+    font-weight: 800;
+    margin-bottom: 1.5rem;
+    font-size: 1.8rem;
+}
+
+/* 2. Le grand conteneur Kaki Clair */
+.collection-container {
+    background-color: #F0F2E8 !important; 
+    border-radius: 20px;
+    padding: 20px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+    border: 1px solid #D1D5C2;
+}
+
+/* Le conteneur qui limite l'affichage à 5 lignes environ */
+#sortable-collections {
+    max-height: 310px; /* Hauteur ajustée pour environ 5 lignes */
+    overflow-y: auto;  /* Active la barre de défilement verticale */
+    padding-right: 10px; /* Espace pour la barre coulissante */
+}
+
+/* Personnalisation de la barre coulissante (plus jolie en kaki) */
+#sortable-collections::-webkit-scrollbar {
+    width: 8px;
+}
+
+#sortable-collections::-webkit-scrollbar-track {
+    background: #E9ECEF;
+    border-radius: 10px;
+}
+
+#sortable-collections::-webkit-scrollbar-thumb {
+    background: #606C38; /* Couleur kaki pour la barre */
+    border-radius: 10px;
+}
+
+#sortable-collections::-webkit-scrollbar-thumb:hover {
+    background: #4B5320;
+}
+
+/* Style du numéro type "Médaille Militaire" */
+.row-number {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 32px;
+    height: 32px;
+    background-color: #606C38; /* Kaki moyen */
+    color: #FEFAE0; /* Crème */
+    font-family: 'Courier New', Courier, monospace; /* Style matricule */
+    font-weight: 800;
+    font-size: 0.85rem;
+    border-radius: 6px; /* Bords légèrement arrondis pour le style moderne */
+    margin-right: 2.5px;
+    box-shadow: inset 0 0 5px rgba(0,0,0,0.2); /* Effet de profondeur */
+    border: 1px solid #4B5320;
+}
+
+/* Ajustement pour que l'icône de déplacement soit bien centrée à côté */
+.handle {
+    font-size: 1rem;
+    color: #A3AD73;
+    cursor: grab;
+    transition: color 0.2s;
+}
+
+.handle:hover {
+    color: #606C38;
+}
+
+/* Style du bouton + */
+.btn-add-item {
+    background-color: transparent;
+    border: 1.5px solid #A3AD73; /* Bordure kaki clair */
+    color: #A3AD73;
+    width: 24px;
+    height: 24px;
+    border-radius: 4px; /* Petit carré arrondi */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 0.7rem;
+    transition: all 0.2s ease-in-out;
+    padding: 0;
+}
+
+/* Effet au survol (Hover) */
+.btn-add-item:hover {
+    background-color: #606C38; /* Fond vert kaki sombre */
+    color: #FEFAE0;           /* Texte crème */
+    border-color: #606C38;
+    transform: scale(1.1);    /* S'agrandit légèrement */
+}
+
+/* Ajustement pour le texte à côté */
+.ms-2 {
+    margin-left: 0.5rem !important;
+}
+
+/* 3. L'entête du tableau (Alignement serré à droite) */
+.collection-header-row {
+    display: flex;
+    align-items: center;
+    padding: 10px 15px;
+    font-weight: 700;
+    color: #4B5320;
+    text-transform: uppercase;
+    font-size: 0.75rem;
+    border-bottom: 2px solid #D1D5C2;
+    margin-bottom: 10px;
+}
+
+/* 4. Les lignes de collection */
+.collection-item {
+    display: flex;
+    align-items: center;
+    background: white;
+    margin-bottom: 10px;
+    padding: 12px 15px;
+    border-radius: 12px;
+    transition: all 0.2s ease;
+}
+
+.collection-item:hover {
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    transform: translateX(5px);
+}
+
+/* 5. Réglage des colonnes (Serré à droite) */
+.col-title { 
+    flex: 2; /* Prend l'espace restant à gauche */
+    font-weight: 600; 
+    color: #283618; 
+    display: flex; 
+    align-items: center; 
+}
+
+.col-stat { 
+    flex: 0.4; /* Très serré */
+    text-align: center; 
+    color: #4B5320; 
+    font-weight: 700;
+    font-size: 0.9rem;
+}
+
+.col-progress { 
+    flex: 1; /* Largeur modérée pour la barre */
+    display: flex;
+    justify-content: flex-end; /* Pousse la barre tout à fait à droite */
+}
+
+/* 6. Barre de progression compacte */
+.progress-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    max-width: 180px; /* Limite la longueur totale */
+}
+
+.progress {
+    flex-grow: 1;
+    height: 8px !important;
+    background-color: #E9ECEF;
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.progress-bar {
+    background-color: #606C38 !important; /* Kaki pour la jauge */
+}
+
+.progress-percent {
+    font-size: 0.8rem;
+    font-weight: 800;
+    color: #283618;
+    min-width: 35px;
+    text-align: right;
+}
+
+/* Icône de déplacement */
+.handle {
+    cursor: grab;
+    color: #C2C5AA;
+    margin-right: 15px;
+}
+
+
+
+
+
+
+
+/* Style de la fenêtre modale */
+.custom-modal-ygo {
+    background-color: #4B5320 !important; /* Fond Kaki comme la sidebar */
+    border: 2px solid #B8860B; /* Bordure Or */
+    color: #FEFAE0;
+    border-radius: 15px;
+}
+
+.custom-modal-ygo .modal-header {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.custom-modal-ygo .modal-title {
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+/* Style des champs de saisie */
+.custom-modal-ygo .form-control {
+    background-color: #F0F2E8;
+    border: none;
+    border-radius: 8px;
+    color: #283618;
+}
+
+/* Boutons de la modale */
+.btn-secondary-ygo {
+    background: transparent;
+    color: white;
+    border: 1px solid white;
+    font-size: 0.8rem;
+}
+
+.btn-premium-small {
+    background: linear-gradient(45deg, #B8860B, #FFD700);
+    color: #283618;
+    border: none;
+    font-weight: 700;
+    padding: 8px 20px;
+    border-radius: 8px;
+}
+
+/* Ajoute ceci pour que l'apparition soit fluide */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.collection-item {
+    animation: fadeIn 0.3s ease-out;
+}

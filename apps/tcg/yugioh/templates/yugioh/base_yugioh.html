@@ -1,0 +1,83 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'yugioh/css/yugioh_style.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="d-flex" id="wrapper">
+<div id="sidebar-wrapper">
+    <div class="sidebar-heading">MENU YU-GI-OH</div>
+    <div class="px-3 mb-4">
+        <a href="#" class="btn btn-premium w-100 d-flex align-items-center justify-content-center">
+             Premium
+        </a>
+    </div>
+    <div class="list-group list-group-flush">
+        <div class="sidebar-title">Mon Compte</div>
+        <a class="list-group-item list-group-item-action" href="{% url 'ygo_collection' %}">
+            <i class="fas fa-chart-line"></i> Ma Collection
+        </a>
+        <a class="list-group-item list-group-item-action" href="#">
+            <i class="fas fa-th"></i> Ma Bibliothèque
+        </a>
+        <a class="list-group-item list-group-item-action" href="#">
+            <i class="fas fa-th"></i> Mes Sceller
+        </a>
+         <a class="list-group-item list-group-item-action" href="#">
+            <i class="fas fa-th"></i> Mes Decks
+        </a>
+         <a class="list-group-item list-group-item-action" href="#">
+            <i class="fas fa-th"></i> Checklist
+        </a>
+
+        <div class="sidebar-title">DataBase</div>
+        <a class="list-group-item list-group-item-action" href="{% url 'catalogue' %}">
+            <i class="fas fa-book-open"></i> Catalogue De Carte
+        </a>
+        <a class="list-group-item list-group-item-action" href="#">
+            <i class="fas fa-book-open"></i> Extension
+        </a>
+        <a class="list-group-item list-group-item-action" href="#">
+            <i class="fas fa-book-open"></i> Rareté
+        </a>
+        <a class="list-group-item list-group-item-action" href="#">
+            <i class="fas fa-book-open"></i> Spoiler
+        </a>
+        <a class="list-group-item list-group-item-action" href="#">
+            <i class="fas fa-book-open"></i> Banlist
+        </a>
+        <a class="list-group-item list-group-item-action" href="#">
+            <i class="fas fa-book-open"></i> ArtWorks
+        </a>
+        <a class="list-group-item list-group-item-action" href="#">
+            <i class="fas fa-book-open"></i> Exclusicité Pays
+        </a>
+        <a class="list-group-item list-group-item-action" href="#">
+            <i class="fas fa-book-open"></i> Exclusicité MasterDuel
+        </a>
+        <div class="sidebar-title">Communauté</div>
+        <a class="list-group-item list-group-item-action" href="#">
+            <i class="fas fa-chart-line"></i> Utilisateur
+        </a>
+        <a class="list-group-item list-group-item-action" href="#">
+            <i class="fas fa-th"></i> Groupe
+        </a>
+        <a class="list-group-item list-group-item-action" href="#">
+            <i class="fas fa-th"></i> Trade-Zone
+        </a>
+         <a class="list-group-item list-group-item-action" href="#">
+            <i class="fas fa-th"></i> Top Decks
+        </a>
+         <a class="list-group-item list-group-item-action" href="#">
+            <i class="fas fa-th"></i> Tournament
+        </a>
+    </div>
+</div>
+
+    <main class="flex-grow-1 px-md-4 py-4">
+        {% block ygo_content %}{% endblock %}
+    </main>
+</div>
+{% endblock %}

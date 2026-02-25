@@ -1,0 +1,483 @@
+{% extends 'basketball/base_basket.html' %}
+{% load static %}
+
+{% block basket_content %}
+
+<style>
+    /* --- BIBLIOTHÈQUE : STRUCTURE DU MEUBLE --- */
+    .library-container {
+        background: #f4f1ea; /* Couleur mur */
+        padding: 40px 20px;
+        min-height: 100vh;
+    }
+
+    .shelf {
+        background: #5d4037; /* Couleur bois sombre */
+        border-bottom: 12px solid #3e2723; /* Épaisseur de la planche */
+        border-radius: 4px;
+        margin-bottom: 60px;
+        padding: 10px 20px 0 20px;
+        display: flex;
+        align-items: flex-end; /* Les classeurs sont posés sur la planche */
+        gap: 15px;
+        min-height: 180px; /* Hauteur de l'étagère */
+        box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+        position: relative;
+    }
+
+    /* Tailles dynamiques des étagères via tes réglages */
+    .shelf.size-sm { transform: scale(0.85); transform-origin: left bottom; }
+    .shelf.size-md { transform: scale(1); }
+    .shelf.size-lg { transform: scale(1.15); transform-origin: left bottom; }
+
+    /* --- LE CLASSEUR (VUE TRANCHE) --- */
+    .binder-item {
+        width: 45px;
+        height: 160px;
+        background: #d32f2f; /* Couleur par défaut (Rouge) */
+        border-radius: 3px 3px 0 0;
+        position: relative;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        box-shadow: inset -5px 0 10px rgba(0,0,0,0.2), 3px 0 5px rgba(0,0,0,0.3);
+        border-left: 2px solid rgba(255,255,255,0.1);
+        text-decoration: none; /* Pour le lien */
+    }
+
+    .binder-item:hover {
+        transform: translateY(-10px) rotate(-2deg);
+        box-shadow: 10px 10px 20px rgba(0,0,0,0.4);
+        z-index: 10;
+    }
+
+    /* Étiquette sur la tranche */
+    .binder-label {
+        background: white;
+        width: 30px;
+        height: 80px;
+        margin-top: 20px;
+        padding: 5px 2px;
+        border-radius: 2px;
+        box-shadow: inset 0 0 5px rgba(0,0,0,0.2);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .binder-name-vertical {
+        writing-mode: vertical-rl;
+        text-orientation: mixed;
+        font-size: 11px;
+        font-weight: bold;
+        color: #333;
+        text-transform: uppercase;
+        max-height: 100%;
+        overflow: hidden;
+    }
+
+    /* Petit trou rond typique des classeurs */
+    .binder-hole {
+        width: 12px;
+        height: 12px;
+        background: #3e2723;
+        border-radius: 50%;
+        margin-top: auto;
+        margin-bottom: 15px;
+        box-shadow: inset 0 2px 4px rgba(0,0,0,0.5);
+    }
+
+    /* Style pour le titre de l'étagère */
+    .shelf-title {
+        position: absolute;
+        top: -30px;
+        left: 0;
+        font-weight: bold;
+        color: #5d4037;
+        text-transform: uppercase;
+        font-size: 0.9rem;
+        letter-spacing: 1px;
+    }
+</style>
+
+<div class="library-container">
+    <div class="d-flex justify-content-between align-items-center mb-5">
+        <h2 class="fw-bold m-0"><i class="bi bi-bookshelf me-2"></i>Ma Bibliothèque</h2>
+        <button class="btn btn-dark" data-bs-toggle="modal" data-bs-target="#addBinderModal">
+            <i class="bi bi-plus-lg me-2"></i>Nouveau Classeur
+        </button>
+    </div>
+
+    <div class="shelf">
+        <span class="shelf-title">Étagère Principale</span>
+        {% for b in user_binders %}
+        <a href="?binder_id={{ b.id }}" class="binder-item" style="background-color: {{ b.color|default:'#d32f2f' }};">
+            <div class="binder-label">
+                <span class="binder-name-vertical">{{ b.abbreviation|default:b.name }}</span>
+            </div>
+            <div class="binder-hole"></div>
+        </a>
+        {% empty %}
+        <p class="text-muted small p-3">Aucun classeur. Cliquez sur "Nouveau Classeur" pour commencer.</p>
+        {% endfor %}
+    </div>
+
+    {% if binder %}
+    <div class="binder-wrapper" id="mainBinder">
+        <div class="left-panel">
+            <div class="binder-header-info d-flex justify-content-between align-items-center">
+                <div>
+                    <h4 class="fw-bold m-0">{{ binder.name }}</h4>
+                    <small class="text-muted">Format {{ binder.format_size|default:"Standard" }} • Page <span id="pageLabel">1</span> / {{ num_pages|default:1 }}</small>
+                </div>
+                <div class="text-center mx-3" style="min-width: 180px;">
+                    <div class="d-flex justify-content-between small fw-bold mb-1">
+                        <span>Complété</span>
+                        <span><span id="ownedCount">{{ cards_owned_count|default:0 }}</span> / {{ total_capacity|default:0 }}</span>
+                    </div>
+                    <div class="progress"><div id="compPercent" class="progress-bar bg-success" style="width: {{ completion_percent|default:0 }}%"></div></div>
+                </div>
+                <div class="form-check form-switch">
+                    <input class="form-check-input" type="checkbox" id="greyModeSwitch" onchange="toggleGreyMode()">
+                    <label class="form-check-label small fw-bold" for="greyModeSwitch">Griser manquantes</label>
+                </div>
+            </div>
+
+            <div class="book-viewport">
+                <div id="bookSpread" class="book-spread"></div>
+                <div class="binder-controls">
+                    <button class="nav-btn" onclick="changePage(-1)" id="prevBtn"><i class="bi bi-chevron-left"></i></button>
+                    <div class="d-flex flex-column align-items-center">
+                        <input type="range" id="pageSlider" min="1" max="{{ num_pages|default:1 }}" value="1" oninput="goToPage(this.value)">
+                        <span style="font-size: 10px; text-transform: uppercase; letter-spacing: 1px;">Feuilleter le classeur</span>
+                    </div>
+                    <button class="nav-btn" onclick="changePage(1)" id="nextBtn"><i class="bi bi-chevron-right"></i></button>
+                </div>
+            </div>
+        </div>
+
+        <div class="right-panel">
+            <ul class="nav nav-tabs nav-fill" id="rightTab">
+                <li class="nav-item">
+                    <button class="nav-link active fw-bold" data-bs-toggle="tab" data-bs-target="#filter-tab">Filtres</button>
+                </li>
+                <li class="nav-item">
+                    <button class="nav-link fw-bold" data-bs-toggle="tab" data-bs-target="#cards-db" id="results-btn">
+                        Résultats (<span id="count-results">0</span>)
+                    </button>
+                </li>
+            </ul>
+            <div class="tab-content flex-grow-1 overflow-hidden d-flex flex-column">
+                <div class="tab-pane fade show active p-3 overflow-auto" id="filter-tab">
+                    <div class="mb-3 position-relative">
+                        <label class="small fw-bold">Nom du joueur</label>
+                        <input type="text" class="form-control form-control-sm" placeholder="Chercher..." id="dbSearch" autocomplete="off">
+                        <div id="autocomplete-results"></div>
+                    </div>
+
+                    <div class="row g-2">
+                        <div class="col-6 mb-2">
+                            <label class="small fw-bold">Équipe</label>
+                            <input type="text" class="form-control form-control-sm f-input" id="f-team" placeholder="ex: Lakers">
+                        </div>
+                        <div class="col-6 mb-2">
+                            <label class="small fw-bold">Saison</label>
+                            <input type="text" class="form-control form-control-sm f-input" id="f-saison" placeholder="ex: 2021-22">
+                        </div>
+                        <div class="col-6 mb-2">
+                            <label class="small fw-bold">Marque</label>
+                            <input type="text" class="form-control form-control-sm f-input" id="f-marque" placeholder="ex: Panini">
+                        </div>
+                        <div class="col-6 mb-2">
+                            <label class="small fw-bold">Produit</label>
+                            <input type="text" class="form-control form-control-sm f-input" id="f-produit" placeholder="ex: Prizm">
+                        </div>
+                        <div class="col-12 mb-2">
+                            <label class="small fw-bold">Parallel / Insert</label>
+                            <input type="text" class="form-control form-control-sm f-input" id="f-parallel" placeholder="Silver, Red, /99...">
+                        </div>
+                        <div class="col-6 mb-2">
+                            <label class="small fw-bold">Type</label>
+                            <input type="text" class="form-control form-control-sm f-input" id="f-type" placeholder="Base, Auto...">
+                        </div>
+                        <div class="col-6 mb-2">
+                            <label class="small fw-bold">Numéro (#)</label>
+                            <input type="text" class="form-control form-control-sm f-input" id="f-num" placeholder="ex: 154">
+                        </div>
+                    </div>
+
+                    <div class="form-check form-switch mt-3">
+                        <input class="form-check-input f-input" type="checkbox" id="f-rc">
+                        <label class="form-check-label small fw-bold" for="f-rc">Rookie Card (RC)</label>
+                    </div>
+                    
+                    <button class="btn btn-dark btn-sm w-100 mt-4" onclick="document.getElementById('results-btn').click()">Voir les résultats</button>
+                </div>
+
+                <div class="tab-pane fade h-100 d-flex flex-column" id="cards-db">
+                    <div class="card-db-list" id="dbResultsContainer">
+                        </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<div class="modal fade" id="addBinderModal" tabindex="-1">
+    <div class="modal-dialog">
+        <form action="{% url 'add_binder' %}" method="POST" class="modal-content">
+            {% csrf_token %}
+            <div class="modal-header">
+                <h5 class="modal-title fw-bold">Ajouter un Classeur</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label class="form-label small fw-bold">Nom complet (ex: Panini Prizm 2024)</label>
+                    <input type="text" name="name" class="form-control" required>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label small fw-bold">Abréviation (Tranche du classeur)</label>
+                    <input type="text" name="abbreviation" class="form-control" maxlength="10" placeholder="ex: PRIZM 24" required>
+                </div>
+                <div class="row">
+                    <div class="col-6 mb-3">
+                        <label class="form-label small fw-bold">Type de rangement</label>
+                        <select name="storage_type" class="form-select">
+                            <option value="small">Petit (2x2)</option>
+                            <option value="medium" selected>Moyen (3x3)</option>
+                            <option value="large">Grand (4x4)</option>
+                            <option value="extra">Large (6x5)</option>
+                        </select>
+                    </div>
+                    <div class="col-6 mb-3">
+                        <label class="form-label small fw-bold">Couleur</label>
+                        <input type="color" name="color" class="form-control form-control-color w-100" value="#d32f2f">
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                <button type="submit" class="btn btn-primary">Créer le classeur</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    let currentPage = 1;
+    const totalPages = {{ num_pages|default:1 }};
+    const slotsPerPage = {{ slots_per_page|default:9 }};
+    const cols = {{ cols|default:3 }};
+    const binderId = "{{ binder.id }}";
+    
+    // Construction de la collection depuis Django
+    const collection = {
+        {% for slot, user_card in collection_dict.items %}
+            "{{ slot }}": { "img": "{{ user_card.card.recto_img|escapejs }}" },
+        {% endfor %}
+    };
+
+    function renderSpread() {
+        const spread = document.getElementById('bookSpread');
+        if (!spread) return;
+        spread.innerHTML = '';
+        if (currentPage === 1) {
+            spread.innerHTML = `<div class="page-spacer"></div>` + createPageHTML(1, 'right');
+        } else {
+            let leftNum = currentPage % 2 === 0 ? currentPage : currentPage - 1;
+            let rightNum = leftNum + 1;
+            spread.innerHTML = createPageHTML(leftNum, 'left');
+            if (rightNum <= totalPages) spread.innerHTML += createPageHTML(rightNum, 'right');
+            else spread.innerHTML += `<div class="page-spacer"></div>`;
+        }
+        updateUI();
+    }
+
+    function createPageHTML(num, side) {
+        let slotsHTML = '';
+        let startSlot = (num - 1) * slotsPerPage + 1;
+        for (let i = 0; i < slotsPerPage; i++) {
+            let sId = startSlot + i;
+            let card = collection[sId];
+            
+            let imgSrc = '';
+            if (card && card.img) {
+                imgSrc = card.img.startsWith('/') || card.img.startsWith('http') ? card.img : `/${card.img}`;
+                if (!card.img.toLowerCase().endsWith('.jpg') && !card.img.toLowerCase().endsWith('.png') && !card.img.startsWith('http')) {
+                     imgSrc += '.jpg';
+                }
+            }
+
+            let content = card ? `<img src="${imgSrc}">` : `<span class="slot-number">${sId}</span>`;
+            slotsHTML += `<div class="card-slot ${card ? 'has-card' : ''}" id="slot-${sId}" ondragover="allowDrop(event)" ondrop="dropInSlot(event, ${sId})">${content}</div>`;
+        }
+        return `<div class="binder-page page-${side}">
+                    <div class="text-muted small mb-2 text-${side === 'left' ? 'start' : 'end'}">PAGE ${num}</div>
+                    <div class="page-grid" style="grid-template-columns: repeat(${cols}, 1fr)">${slotsHTML}</div>
+                </div>`;
+    }
+
+    function changePage(dir) {
+        if (currentPage === 1 && dir === 1) currentPage = 2;
+        else if (currentPage === 2 && dir === -1) currentPage = 1;
+        else currentPage += (dir * 2);
+        if (currentPage < 1) currentPage = 1;
+        if (currentPage > totalPages) currentPage = totalPages;
+        renderSpread();
+    }
+
+    function goToPage(val) { currentPage = parseInt(val); renderSpread(); }
+    
+    function updateUI() {
+        if(!document.getElementById('pageLabel')) return;
+        document.getElementById('pageLabel').innerText = currentPage;
+        document.getElementById('pageSlider').value = currentPage;
+        document.getElementById('prevBtn').disabled = (currentPage === 1);
+        document.getElementById('nextBtn').disabled = (currentPage >= totalPages);
+    }
+    
+    function allowDrop(ev) { ev.preventDefault(); }
+    
+    function dragCard(ev, id, img) {
+        ev.dataTransfer.setData("cId", id);
+        ev.dataTransfer.setData("cImg", img);
+    }
+
+    function dropInSlot(ev, sId) {
+        ev.preventDefault();
+        const cId = ev.dataTransfer.getData("cId");
+        const cImg = ev.dataTransfer.getData("cImg");
+        const slot = document.getElementById('slot-' + sId);
+        
+        if (cId && cImg) {
+            slot.innerHTML = `<img src="${cImg}">`;
+            slot.classList.add('has-card');
+            collection[sId] = { "img": cImg };
+            saveCardToBinder(cId, sId);
+        }
+    }
+
+    function saveCardToBinder(cardId, slotNumber) {
+        fetch('/add_card_to_binder/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token }}'
+            },
+            body: JSON.stringify({
+                binder_id: binderId,
+                card_id: cardId,
+                slot_number: slotNumber
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if(data.status === 'success') {
+                if(data.new_count) document.getElementById('ownedCount').innerText = data.new_count;
+                if(data.new_percent) document.getElementById('compPercent').style.width = data.new_percent + '%';
+            }
+        })
+        .catch(err => console.error("Erreur sauvegarde:", err));
+    }
+
+    function toggleGreyMode() { document.getElementById('mainBinder').classList.toggle('show-missing-grey'); }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        renderSpread();
+        const searchInput = document.getElementById('dbSearch');
+        if(!searchInput) return;
+
+        const autocompleteBox = document.getElementById('autocomplete-results');
+        const resultsContainer = document.getElementById('dbResultsContainer');
+        const countDisplay = document.getElementById('count-results');
+        const filterInputs = document.querySelectorAll('.f-input');
+        let timeout = null;
+
+        function performSearch(nameQuery = null) {
+            const params = new URLSearchParams({
+                q: nameQuery !== null ? nameQuery : searchInput.value,
+                team: document.getElementById('f-team').value,
+                saison: document.getElementById('f-saison').value,
+                marque: document.getElementById('f-marque').value,
+                produit: document.getElementById('f-produit').value,
+                parallel: document.getElementById('f-parallel').value,
+                num: document.getElementById('f-num').value,
+                rc: document.getElementById('f-rc').checked ? '1' : ''
+            });
+
+            fetch(`/search_cards/?${params.toString()}`)
+                .then(res => res.json())
+                .then(data => {
+                    resultsContainer.innerHTML = '';
+                    countDisplay.innerText = data.results.length;
+                    
+                    if (data.results.length === 0) {
+                        resultsContainer.innerHTML = '<div class="text-center w-100 p-3 text-muted">Aucun résultat</div>';
+                        return;
+                    }
+
+                    data.results.forEach(card => {
+                        let imgPath = card.image ? (card.image.startsWith('/') || card.image.startsWith('http') ? card.image : `/${card.image}.jpg`) : '';
+                        const item = document.createElement('div');
+                        item.className = 'db-card-item';
+                        item.draggable = true;
+                        item.setAttribute('ondragstart', `dragCard(event, ${card.id}, '${imgPath}')`);
+                        item.innerHTML = `
+                            <div style="position:relative">
+                                ${card.rc ? '<span class="tag-rc">RC</span>' : ''}
+                                <img src="${imgPath}" onerror="this.src='https://via.placeholder.com/150x210?text=Pas+d\\'image'">
+                            </div>
+                            <div class="card-info-box">
+                                <span class="info-name">${card.name}</span>
+                                <span class="info-sub">${card.saison || ''} ${card.marque || ''}</span>
+                                <span class="info-sub text-truncate"><b>${card.parallel || 'Base'}</b></span>
+                            </div>`;
+                        resultsContainer.appendChild(item);
+                    });
+                });
+        }
+
+        searchInput.addEventListener('input', function() {
+            const query = this.value;
+            clearTimeout(timeout);
+            if (query.length < 2) { autocompleteBox.style.display = 'none'; return; }
+            timeout = setTimeout(() => {
+                fetch(`/search_cards/?q=${encodeURIComponent(query)}`)
+                    .then(res => res.json())
+                    .then(data => {
+                        autocompleteBox.innerHTML = '';
+                        if (data.results.length > 0) {
+                            autocompleteBox.style.display = 'block';
+                            const uniqueNames = [...new Set(data.results.map(c => c.name))].slice(0, 10);
+                            uniqueNames.forEach(n => {
+                                const div = document.createElement('div');
+                                div.className = 'autocomplete-item';
+                                div.innerText = n;
+                                div.onclick = () => {
+                                    searchInput.value = n;
+                                    autocompleteBox.style.display = 'none';
+                                    performSearch(n);
+                                };
+                                autocompleteBox.appendChild(div);
+                            });
+                        } else { autocompleteBox.style.display = 'none'; }
+                    });
+            }, 300);
+        });
+
+        filterInputs.forEach(input => {
+            input.addEventListener('input', () => {
+                clearTimeout(timeout);
+                timeout = setTimeout(performSearch, 500);
+            });
+        });
+
+        document.addEventListener('click', (e) => { if (!searchInput.contains(e.target)) autocompleteBox.style.display = 'none'; });
+    });
+</script>
+{% endblock %}
+{% endblock %}

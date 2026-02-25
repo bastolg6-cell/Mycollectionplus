@@ -1,0 +1,146 @@
+/* =======================================================
+   NAVBAR STYLE : Apple Blue Edition
+   ======================================================= */
+
+:root {
+    --electric-blue: #007AFF;
+    --apple-glass: rgba(255, 255, 255, 0.9);
+    --apple-text: #1d1d1f;
+}
+
+/* --- 1. STRUCTURE PRINCIPALE --- */
+.navbar-marron {
+    background-color: var(--electric-blue) !important;
+    padding: 0.6rem 1.5rem !important;
+    box-shadow: 0 4px 12px rgba(0, 122, 255, 0.15);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.navbar-marron .navbar-brand {
+    font-weight: 800 !important;
+    letter-spacing: -0.5px;
+    font-size: 1.3rem;
+    color: #ffffff !important;
+}
+
+.navbar-marron .nav-link {
+    color: rgba(255, 255, 255, 0.85) !important;
+    font-weight: 500;
+    font-size: 0.95rem;
+    transition: all 0.2s ease;
+}
+
+.navbar-marron .nav-link:hover {
+    color: #ffffff !important;
+    transform: translateY(-1px);
+}
+
+/* --- 2. BARRE DE RECHERCHE (BLANCHE & ÉPURÉE) --- */
+.navbar-marron .input-group {
+    background-color: #ffffff !important;
+    border-radius: 12px !important;
+    border: none !important;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    max-width: 450px;
+    transition: all 0.2s ease;
+    overflow: hidden;
+}
+
+.navbar-marron .input-group:focus-within {
+    transform: scale(1.01);
+    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.15);
+}
+
+.navbar-marron .form-control {
+    background: transparent !important;
+    border: none !important;
+    color: var(--apple-text) !important;
+    font-weight: 500;
+    padding-left: 1.2rem;
+}
+
+.navbar-marron .form-control::placeholder {
+    color: #a1a1a6;
+}
+
+.navbar-marron .input-group .btn {
+    background: transparent !important;
+    color: var(--electric-blue) !important;
+    border: none !important;
+}
+
+/* --- 3. BOUTON COMPTE (PROFILE PILL) --- */
+.profile-link {
+    background: rgba(255, 255, 255, 0.2) !important;
+    border: 1px solid rgba(255, 255, 255, 0.4) !important;
+    border-radius: 50px !important;
+    padding: 5px 15px !important;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    text-decoration: none !important;
+    transition: all 0.3s ease;
+    margin-left: 10px;
+}
+
+.profile-link:hover {
+    background: #ffffff !important;
+    transform: translateY(-1px);
+}
+
+.profile-link:hover .profile-icon, 
+.profile-link:hover .profile-text {
+    color: var(--electric-blue) !important;
+}
+
+.profile-icon {
+    font-size: 20px !important;
+    color: #ffffff !important;
+    margin: 0 !important;
+    transition: color 0.2s;
+}
+
+.profile-text {
+    color: #ffffff;
+    font-weight: 600;
+    font-size: 0.85rem;
+    transition: color 0.2s;
+}
+
+/* --- 4. DROPDOWNS & TOOLS --- */
+#darkModeToggle {
+    border: 1px solid rgba(255, 255, 255, 0.3) !important;
+    color: white !important;
+    background: transparent;
+    border-radius: 10px;
+    width: 35px;
+    height: 35px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+}
+
+#darkModeToggle:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.dropdown-menu {
+    border: none !important;
+    border-radius: 15px !important;
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15) !important;
+    background: var(--apple-glass) !important;
+    backdrop-filter: blur(10px);
+    padding: 8px !important;
+}
+
+.dropdown-item {
+    border-radius: 8px;
+    font-weight: 500;
+    transition: all 0.2s;
+}
+
+.dropdown-item:hover {
+    background-color: var(--electric-blue) !important;
+    color: white !important;
+}

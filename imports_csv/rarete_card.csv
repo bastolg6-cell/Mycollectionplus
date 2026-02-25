@@ -1,0 +1,60 @@
+code_rarete,abv_rarete,group_rarete,family_rarete
+1,TOKEN,special,Spécial
+2,OVER,special,Spécial
+3,TACT,special,Spécial
+100,C,base,Commune
+101,CMPAR,parrallel,Commune
+102,CMDT,duel terminal,Commune
+200,R,base,Rare
+201,RGOLD,lettre variation,Rare
+202,RBR,lettre variation,Rare
+203,RBL,lettre variation,Rare
+204,RG,lettre variation,Rare
+205,RPURP,lettre variation,Rare
+206,RRED,lettre variation,Rare
+207,RBW,lettre variation,Rare
+208,RLBL,lettre variation,Rare
+209,RSTP,stamp,Rare
+210,RDT,duel terminal,Rare
+300,SP,base,super rare
+301,SPPAR,parrallel,super rare
+302,SPDT,duel terminal,super rare
+400,UR,base,ultra rare
+401,USILV,lettre variation,ultra rare
+402,UAST,lettre variation,ultra rare
+403,USAST,lettre variation,ultra rare
+404,UBL,lettre variation,ultra rare
+405,UG,lettre variation,ultra rare
+406,UPURP,lettre variation,ultra rare
+407,URED,lettre variation,ultra rare
+408,UPAR,parrallel,ultra rare
+409,UDT,duel terminal,ultra rare
+410,UDUSA,rarete original,ultra rare
+411,UPHAR,pharaonique,ultra rare
+412,USTP,stamp,ultra rare
+500,SR,base,secret rare
+501,SRBL,lettre variation,secret rare
+502,SRPRI,rarete superieur,secret rare
+503,SRDT,duel terminal,secret rare
+504,SRPHA,pharaonique,secret rare
+505,SRSTP,stamp,secret rare
+506,SRREM,rarete superieur,secret rare
+600,ULTI,rarete superieur,ultimate
+601,PULTI,rarete superieur,ultimate
+610,COLR,rarete superieur,collector
+611,PCOLR,rarete superieur,collector
+620,GHOST,rarete superieur,ghost
+630,GR,rarete superieur,gold
+631,GHOGR,rarete superieur,ghost / gold
+632,GSR,rarete superieur,gold
+633,PGR,rarete superieur,gold
+640,PLAT,rarete superieur,platinium
+641,PLATSR,rarete superieur,platinium
+650,STARF,rarete original,special foil 
+651,MOSCR,rarete original,special foil 
+652,SHATR,rarete original,special foil 
+700,SLR,rarete elite,extra foil 
+701,SLRAS,rarete elite,extra foil 
+710,QCSR,rarete elite,extra foil 
+900,EXTRA,rarete majeur,top foil
+901,10K,rarete majeur,top foil

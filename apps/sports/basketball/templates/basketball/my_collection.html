@@ -1,0 +1,449 @@
+{% extends 'basketball/base_basket.html' %}
+{% load static %}
+{% load humanize %}
+
+{% block basket_content %}
+
+<div id="dashboard-config" 
+     data-ajax-url="{% url 'get_collection_stats' %}"
+     data-preview-url="{% url 'preview_collection_count' %}"
+     data-save-url="{% url 'save_new_collection_view' %}"
+     data-reorder-url="{% url 'update_collection_order' %}"
+     data-delete-url="{% url 'delete_collection_view' %}"
+     data-base-default="{{ stats_generales.count_base|default:0 }}"
+     data-inserts-default="{{ stats_generales.count_inserts|default:0 }}"
+     data-memo-default="{{ stats_generales.count_memo|default:0 }}"
+     data-autos-default="{{ stats_generales.count_autos|default:0 }}"
+     data-total-default="{{ stats_generales.total_cards|default:0 }}"
+     data-player-default="{{ stats_generales.top_player|default:'-' }}"
+     data-team-default="{{ stats_generales.top_team|default:'-' }}">
+</div>
+
+<div class="container-fluid py-3">
+
+    <div class="row mb-3">
+        <div class="col-12">
+            <div class="apple-card shadow-sm p-4">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h2 class="fw-bold h4 mb-0" style="letter-spacing: -0.5px;">Mes Collections</h2>
+                    <div class="dropdown">
+                        <button class="btn btn-dark rounded-pill px-4 btn-sm fw-bold" type="button" data-bs-toggle="dropdown">
+                            Gérer <i class="bi bi-chevron-down ms-1"></i>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end border-0 shadow-lg p-2" style="border-radius: 16px;">
+                            <li><a class="dropdown-item rounded-3 py-2" href="#" data-bs-toggle="modal" data-bs-target="#addCollectionViewModal">Ajouter</a></li>
+                            <li><a class="dropdown-item rounded-3 py-2" href="#" id="btn-modifier-vues">Organiser</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><button id="clear-prefs-btn" class="dropdown-item text-danger rounded-3 py-2">Réinitialiser</button></li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div id="sortable-list" class="list-group"> 
+                    {% for collection in collections_stats %}
+                        <div class="list-group-item list-group-item-action collection-selector d-flex align-items-center" data-id="{{ collection.name }}">
+                            
+                            <i class="bi bi-grip-vertical drag-handle me-2 text-muted" style="cursor: move; font-size: 1.5rem;"></i>
+                            
+                            <div class="d-flex align-items-center flex-grow-1">
+                                <div class="me-3 bg-white shadow-sm d-flex align-items-center justify-content-center rounded-circle" style="width: 42px; height: 42px;">
+                                    <i class="bi {{ collection.icon|default:'bi-collection-fill' }} text-primary"></i>
+                                </div>
+
+                                <div class="flex-grow-1">
+                                    <div class="fw-bold mb-0 text-dark">{{ collection.name }}</div>
+                                    <div class="text-muted small">{{ collection.season }}</div>
+                                </div>
+
+                                <div class="d-flex align-items-center gap-4">
+                                    <div class="text-end">
+                                        <div class="text-muted" style="font-size: 0.6rem; letter-spacing: 0.5px;">PROGRÈS</div>
+                                        <div class="fw-bold">{{ collection.owned|intcomma }} / {{ collection.total|intcomma }}</div>
+                                    </div>
+                                    <div class="stat-pill text-primary border border-primary-subtle">
+                                        {{ collection.percent|floatformat:1 }}%
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <button type="button" class="btn btn-link text-primary btn-edit-collection p-0 ms-3" 
+                                    style="display: none;" 
+                                    data-name="{{ collection.name }}"
+                                    data-icon="{{ collection.icon }}"
+                                    data-players="{{ collection.players_list|join:',' }}"
+                                    data-teams="{{ collection.teams_list|join:',' }}"
+                                    data-seasons="{{ collection.seasons_list|join:',' }}"
+                                    data-products="{{ collection.products_list|join:',' }}"
+                                    data-categories="{{ collection.categories_list|join:',' }}"
+                                    data-types="{{ collection.types_list|join:',' }}"
+                                    data-parallels="{{ collection.parallels_list|join:',' }}">
+                                    <i class="bi bi-pencil-square"></i>
+                            </button>
+
+                            <button class="btn btn-link text-danger btn-delete-collection p-0 ms-3">
+                                <i class="bi bi-trash3-fill"></i>
+                            </button>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row tight-row mb-4">
+        <div class="col-md-9">
+            <div class="apple-card shadow-sm p-4 h-100">
+                <div class="row align-items-center">
+                    <div class="col-md-5 text-center">
+                        <div class="position-relative">
+                            <canvas id="collectionChart" style="max-height: 200px;"></canvas>
+                            <div class="position-absolute top-50 start-50 translate-middle">
+                                <div class="h2 fw-bold mb-0" id="stat-total">{{ stats_generales.total_cards|default:0 }}</div>
+                                <div class="text-muted small text-uppercase" style="font-size: 0.55rem; letter-spacing: 1px;">Cartes</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-7">
+                        <div class="row g-2">
+                            <div class="col-6">
+                                <div class="p-3 rounded-4 bg-white border border-light shadow-sm">
+                                    <div class="text-muted small fw-bold mb-1" style="font-size: 0.65rem; color: #0066cc !important;">BASE</div>
+                                    <div class="h4 fw-bold mb-0" id="stat-base">0</div>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="p-3 rounded-4 bg-white border border-light shadow-sm">
+                                    <div class="text-muted small fw-bold mb-1" style="font-size: 0.65rem; color: #5ac8fa !important;">INSERTS</div>
+                                    <div class="h4 fw-bold mb-0" id="stat-inserts">0</div>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="p-3 rounded-4 bg-white border border-light shadow-sm">
+                                    <div class="text-muted small fw-bold mb-1" style="font-size: 0.65rem; color: #ffcc00 !important;">MEMO</div>
+                                    <div class="h4 fw-bold mb-0" id="stat-memo">0</div>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="p-3 rounded-4 bg-white border border-light shadow-sm">
+                                    <div class="text-muted small fw-bold mb-1" style="font-size: 0.65rem; color: #ff3b30 !important;">AUTOS</div>
+                                    <div class="h4 fw-bold mb-0" id="stat-autos">0</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mt-3 p-3 rounded-4" style="background: rgba(0,0,0,0.03);">
+                            <div class="row text-center">
+                                <div class="col-6 border-end border-2">
+                                    <div class="text-muted small mb-1" style="font-size: 0.7rem;">Joueur Favori</div>
+                                    <div id="stat-player" class="fw-bold small text-truncate px-1">-</div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="text-muted small mb-1" style="font-size: 0.7rem;">Équipe Phare</div>
+                                    <div id="stat-team" class="fw-bold small text-truncate px-1">-</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="apple-card p-3 h-100 d-flex flex-column align-items-center justify-content-center text-center shadow-sm" style="border: 1px dashed #d2d2d7; background: #fff;">
+                <span class="badge rounded-pill bg-light text-muted border mb-3" style="font-size: 0.6rem;">PUBLICITÉ</span>
+                <div class="flex-grow-1 d-flex align-items-center">
+                    <div class="text-muted small italic">
+                        <i class="bi bi-megaphone fs-4 d-block mb-2"></i>
+                        Espace prêt pour<br>format 300x600
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-lg-9">
+            <div class="apple-card shadow-sm p-4">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h2 class="fw-bold h4 mb-0" style="letter-spacing: -0.5px;">
+                        {{ active_set_name|default:"Toute la collection" }}
+                    </h2>
+                    <span class="stat-pill text-primary bg-white border border-primary-subtle shadow-none">
+                        {{ collection_cards.paginator.count }} cartes
+                    </span>
+                </div>
+                
+                <div class="basket-grid-10">
+                    {% for card in collection_cards %}
+                    <div class="card-item-wrapper">
+                        <div class="card-visual-container {% if not card.is_owned %}is-locked{% endif %}">
+                            {% if card.recto_img %}
+                            <img src="/{{ card.recto_img }}.jpg" 
+                                 class="card-img-thumb" 
+                                 alt="{{ card.name }}"
+                                 onerror="this.onerror=null; this.src='{% static 'basketball/images/placeholder_card.png' %}';">
+                            {% else %}
+                            <img src="{% static 'basketball/images/placeholder_card.png' %}" 
+                                 class="card-img-thumb" 
+                                 alt="En attente">
+                            {% endif %}
+                            
+                            {% if not card.is_owned %}
+                            <div class="card-overlay d-flex align-items-center justify-content-center" style="position: absolute; bottom: 5px; width: 100%;">
+                                <span class="badge rounded-pill bg-dark opacity-75" style="font-size: 0.6rem;">#{{ card.numero_card }}</span>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% empty %}
+                    <div class="col-12 text-center py-5 text-muted">
+                        <i class="bi bi-search display-4 d-block mb-3 opacity-25"></i>
+                        <p class="fw-bold">Aucune carte trouvée</p>
+                    </div>
+                    {% endfor %}
+                </div>
+
+                {% if collection_cards.has_other_pages %}
+                <nav class="mt-5">
+                    <ul class="pagination pagination-custom justify-content-center gap-2">
+                        {% if collection_cards.has_previous %}
+                        <li class="page-item"><a class="page-link rounded-circle border-0 shadow-sm" href="?{{ request.GET.urlencode }}&page={{ collection_cards.previous_page_number }}"><i class="bi bi-chevron-left"></i></a></li>
+                        {% endif %}
+                        <li class="page-item active"><span class="page-link rounded-pill border-0 px-4 shadow-sm" style="background: #007AFF;">{{ collection_cards.number }}</span></li>
+                        {% if collection_cards.has_next %}
+                        <li class="page-item"><a class="page-link rounded-circle border-0 shadow-sm" href="?{{ request.GET.urlencode }}&page={{ collection_cards.next_page_number }}"><i class="bi bi-chevron-right"></i></a></li>
+                        {% endif %}
+                    </ul>
+                </nav>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="col-lg-3">
+            <div class="apple-card shadow-sm p-4 sticky-top" style="top: 20px;">
+                <div class="d-flex align-items-center justify-content-between mb-4">
+                    <h6 class="fw-bold mb-0 text-uppercase small" style="letter-spacing: 1px; color: #86868b;">Filtres</h6>
+                    <a href="?view_set={{ request.GET.view_set }}" class="text-decoration-none small fw-bold" style="color: #007AFF;">RAZ</a>
+                </div>
+
+                <form method="GET" id="filter-form">
+                    <input type="hidden" name="view_set" value="{{ request.GET.view_set }}">
+
+                    <div class="mb-3">
+                        <label class="small fw-bold text-muted mb-1 ml-1">POSSESSION</label>
+                        <select class="form-select apple-select" name="status">
+                            <option value="all">Toutes</option>
+                            <option value="owned" {% if request.GET.status == 'owned' %}selected{% endif %}>Possédées</option>
+                            <option value="missing" {% if request.GET.status == 'missing' %}selected{% endif %}>Manquantes</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="small fw-bold text-muted mb-1 ml-1">JOUEUR</label>
+                        <select class="form-select apple-select" name="v_name">
+                            <option value="">Tous les joueurs</option>
+                            {% for n in names %}<option value="{{ n }}" {% if request.GET.v_name == n %}selected{% endif %}>{{ n }}</option>{% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="small fw-bold text-muted mb-1 ml-1">ÉQUIPE</label>
+                        <select class="form-select apple-select" name="v_team">
+                            <option value="">Toutes les équipes</option>
+                            {% for t in teams %}<option value="{{ t }}" {% if request.GET.v_team == t %}selected{% endif %}>{{ t }}</option>{% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="small fw-bold text-muted mb-1 ml-1">SAISON</label>
+                        <select class="form-select apple-select" name="v_season">
+                            <option value="">Toutes les saisons</option>
+                            {% for s in seasons %}<option value="{{ s }}" {% if request.GET.v_season == s %}selected{% endif %}>{{ s }}</option>{% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="small fw-bold text-muted mb-1 ml-1">PRODUIT / SÉRIE</label>
+                        <select class="form-select apple-select" name="v_products">
+                            <option value="">Tous les produits</option>
+                            {% for p in products_list %}<option value="{{ p }}" {% if request.GET.v_products == p %}selected{% endif %}>{{ p }}</option>{% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="small fw-bold text-muted mb-1 ml-1">CATÉGORIE</label>
+                        <select class="form-select apple-select" name="v_category">
+                            <option value="">Toutes</option>
+                            {% for c in categories %}<option value="{{ c }}" {% if request.GET.v_category == c %}selected{% endif %}>{{ c }}</option>{% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="small fw-bold text-muted mb-1 ml-1">TYPE DE CARTE</label>
+                        <select class="form-select apple-select" name="v_type">
+                            <option value="">Tous les types</option>
+                            {% for t in types %}<option value="{{ t }}" {% if request.GET.v_type == t %}selected{% endif %}>{{ t }}</option>{% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="small fw-bold text-muted mb-1 ml-1">PARALLÈLE / COULEUR</label>
+                        <select class="form-select apple-select" name="v_parallel">
+                            <option value="">Tous</option>
+                            {% for p in parallels %}<option value="{{ p }}" {% if request.GET.v_parallel == p %}selected{% endif %}>{{ p }}</option>{% endfor %}
+                        </select>
+                    </div>
+
+                    <button type="submit" class="btn btn-dark w-100 rounded-pill py-2 fw-bold shadow-sm" style="background: #1d1d1f !important; border: none;">
+                        FILTRER LA VUE
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="addCollectionViewModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 24px; overflow: hidden;">
+            <div class="modal-header bg-dark text-white border-0">
+                <h5 class="modal-title fw-bold">Configurer une nouvelle vue</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="form-nouvelle-vue">
+                {% csrf_token %}
+                <div class="modal-body bg-light p-4">
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <label class="small fw-bold mb-1">ICÔNE</label>
+                            <select class="form-select apple-select" name="v_icon">
+                                <option value="bi-star-fill">⭐ Étoile</option>
+                                <option value="bi-person-fill">👤 Joueur</option>
+                                <option value="bi-shield-shaded">🛡️ Équipe</option>
+                                <option value="bi-fire">🔥 Hot</option>
+                                <option value="bi-trophy-fill">🏆 Championship</option>
+                            </select>
+                        </div>
+                        <div class="col-md-8">
+                            <label class="small fw-bold mb-1">NOM DE LA COLLECTION</label>
+                            <input type="text" class="form-control rounded-3" name="v_custom_name" placeholder="Ex: Ma PC Trey Murphy" required>
+                        </div>
+                        <hr class="my-3">
+                        <div class="col-md-6">
+                            <label class="small fw-bold mb-1">JOUEUR</label>
+                            <select class="form-select select2-multiple" name="v_players" multiple="multiple">
+                                {% for n in names %}<option value="{{ n }}">{{ n }}</option>{% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="small fw-bold mb-1">ÉQUIPE</label>
+                            <select class="form-select select2-multiple" name="v_teams" multiple="multiple">
+                                {% for t in teams %}<option value="{{ t }}">{{ t }}</option>{% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="small fw-bold mb-1">SAISON</label>
+                            <select class="form-select select2-multiple" name="v_seasons" multiple="multiple">
+                                {% for s in seasons %}<option value="{{ s }}">{{ s }}</option>{% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="small fw-bold mb-1">PRODUIT</label>
+                            <select class="form-select select2-multiple" name="v_products" multiple="multiple">
+                                {% for p in products_list %}<option value="{{ p }}">{{ p }}</option>{% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="small fw-bold mb-1">CATÉGORIE</label>
+                            <select class="form-select select2-multiple" name="v_categories" multiple="multiple">
+                                {% for c in categories %}<option value="{{ c }}">{{ c }}</option>{% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="small fw-bold mb-1">TYPE</label>
+                            <select class="form-select select2-multiple" name="v_types" multiple="multiple">
+                                {% for t in types %}<option value="{{ t }}">{{ t }}</option>{% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="small fw-bold mb-1">PARALLEL</label>
+                            <select class="form-select select2-multiple" name="v_parallels" multiple="multiple">
+                                {% for pa in parallels %}<option value="{{ pa }}">{{ pa }}</option>{% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div id="preview-result-container" class="px-3 pb-3 d-none">
+                    <div class="alert alert-info d-flex align-items-center justify-content-between mb-0 border-0 rounded-4">
+                        <div class="small"><i class="bi bi-info-circle-fill me-2"></i><span id="preview-text"></span></div>
+                        <button type="button" id="btn-confirmer-ajout" class="btn btn-sm btn-success fw-bold rounded-pill px-3">OUI, AJOUTER</button>
+                    </div>
+                </div>
+                <div class="modal-footer bg-white border-0">
+                    <button type="button" class="btn btn-light fw-bold rounded-pill px-4" data-bs-dismiss="modal">ANNULER</button>
+                    <button type="button" id="btn-previsualiser" class="btn btn-primary fw-bold rounded-pill px-4">CALCULER</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="editCollectionViewModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 24px; overflow: hidden;">
+            <div class="modal-header bg-primary text-white border-0">
+                <h5 class="modal-title fw-bold">Modifier la collection</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="form-modifier-vue">
+                {% csrf_token %}
+                <input type="hidden" id="edit-old-name-input" name="old_name">
+                <div class="modal-body bg-light p-4">
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <label class="small fw-bold mb-1">ICÔNE</label>
+                            <select class="form-select apple-select" name="v_icon">
+                                <option value="bi-star-fill">⭐ Étoile</option>
+                                <option value="bi-person-fill">👤 Joueur</option>
+                                <option value="bi-shield-shaded">🛡️ Équipe</option>
+                                <option value="bi-fire">🔥 Hot</option>
+                                <option value="bi-trophy-fill">🏆 Championship</option>
+                            </select>
+                        </div>
+                        <div class="col-md-8">
+                            <label class="small fw-bold mb-1">NOM DE LA COLLECTION</label>
+                            <input type="text" class="form-control rounded-3" name="v_custom_name" required>
+                        </div>
+                        <hr class="my-3">
+                        <div class="col-md-6">
+                            <label class="small fw-bold mb-1">JOUEUR</label>
+                            <select class="form-select select2-multiple" name="v_players" multiple="multiple">
+                                {% for n in names %}<option value="{{ n }}">{{ n }}</option>{% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="small fw-bold mb-1">ÉQUIPE</label>
+                            <select class="form-select select2-multiple" name="v_teams" multiple="multiple">
+                                {% for t in teams %}<option value="{{ t }}">{{ t }}</option>{% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer bg-white border-0">
+                    <button type="button" class="btn btn-light fw-bold rounded-pill px-4" data-bs-dismiss="modal">ANNULER</button>
+                    <button type="button" id="btn-sauvegarder-edit" class="btn btn-success fw-bold rounded-pill px-4">SAUVEGARDER</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+    <script src="{% static 'basketball/js/basketball.js' %}"></script>
+{% endblock %}

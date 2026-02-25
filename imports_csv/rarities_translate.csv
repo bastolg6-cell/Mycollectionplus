@@ -1,0 +1,60 @@
+rarities_translate,abv_rarete,abv_langue,name_rarities
+TOKEN-FR,TOKEN,FR,Token
+OVER-FR,OVER,FR,Over-sized
+TACT-FR,TACT,FR,Stratégique
+C-FR,C,FR,Commune
+CMPAR-FR,CMPAR,FR,Commune Parrallèle
+CMDT-FR,CMDT,FR,Commune Duel Terminal
+R-FR,R,FR,Rare
+RGOLD-FR,RGOLD,FR,Rare Or
+RBR-FR,RBR,FR,Rare Bronze
+RBL-FR,RBL,FR,Rare Bleu
+RG-FR,RG,FR,Rare Vert
+RPURP-FR,RPURP,FR,Rare Violet
+RRED-FR,RRED,FR,Rare Rouge
+RBW-FR,RBW,FR,Rare Blanc/Noir
+RLBL-FR,RLBL,FR,Rare Bleu Claire
+RSTP-FR,RSTP,FR,Rare Tamponné
+RDT-FR,RDT,FR,Rare Duel Terminal
+SP-FR,SP,FR,Super Rare
+SPPAR-FR,SPPAR,FR,Super Rare Parrallèle
+SPDT-FR,SPDT,FR,Super Rare Duel Terminal
+UR-FR,UR,FR,Ultra Rare
+USILV-FR,USILV,FR,Ultra Rare Argent
+UAST-FR,UAST,FR,Ultra Rare Astral
+USAST-FR,USAST,FR,Ultra Rare Astral Argent
+UBL-FR,UBL,FR,Ultra Rare Bleu
+UG-FR,UG,FR,Ultra Rare Or
+UPURP-FR,UPURP,FR,Ultra Rare Violet
+URED-FR,URED,FR,Ultra Rare Rouge
+UPAR-FR,UPAR,FR,Ultra Rare Parrallèle
+UDT-FR,UDT,FR,Ultra Rare Duel Terminal
+UDUSA-FR,UDUSA,FR,Ultra Rare - Saga du dueliste
+UPHAR-FR,UPHAR,FR,Ultra Rare Pharaonique
+USTP-FR,USTP,FR,Ultra Rare Tamponné
+SR-FR,SR,FR,Secrète Rare
+SRBL-FR,SRBL,FR,Secrète Rare Bleu
+SRPRI-FR,SRPRI,FR,Secrète Rare Prismatique
+SRDT-FR,SRDT,FR,Secrète Rare Duel Terminal
+SRPHA-FR,SRPHA,FR,Secrète Rare Pharaonique
+SRSTP-FR,SRSTP,FR,Secrète Rare Tamponné
+SRREM-FR,SRREM,FR,Secrète Rare Remote Duel
+ULTI-FR,ULTI,FR,Ultimate Rare
+PULTI-FR,PULTI,FR,Prismatique Ultimate Rare
+COLR-FR,COLR,FR,Collector's Rare
+PCOLR-FR,PCOLR,FR,Prismatique Collector's
+GHOST-FR,GHOST,FR,Ghost Rare
+GR-FR,GR,FR,Gold Rare
+GHOGR-FR,GHOGR,FR,Ghost Gold Rare
+GSR-FR,GSR,FR,Gold Secrète Rare
+PGR-FR,PGR,FR,Prenium Gold Rare
+PLAT-FR,PLAT,FR,Platinium Rare
+PLATSR-FR,PLATSR,FR,Platinium Secrète Rare
+STARF-FR,STARF,FR,Starfoil Rare
+MOSCR-FR,MOSCR,FR,Moscaique Rare
+SHATR-FR,SHATR,FR,Shatterfoil Rare
+SLR-FR,SLR,FR,Starlight Rare
+SLRAS-FR,SLRAS,FR,Starlight Astral Rare
+QCSR-FR,QCSR,FR,Quart Siècle Secrète Rare
+EXTRA-FR,EXTRA,FR,Extra-Secrète Rare
+10K-FR,10K,FR,Secrète Rare 10 000
