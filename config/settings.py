@@ -139,6 +139,8 @@ STATICFILES_FINDERS = [
     'django.contrib.staticfiles.finders.AppDirectoriesFinder', # Cherche dans les dossiers static/ des apps
 ]
 
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+
 # Où aller après la connexion
 LOGIN_REDIRECT_URL = '/yugioh/'
 
