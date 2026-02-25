@@ -53,8 +53,6 @@ urlpatterns = [
     path('bibliotheque/creer/', basket_views.create_library, name='create_library'),
 
     path('basketball/delete-view/', basket_views.delete_collection_view, name='delete_collection_view'),
-    path('basketball/save-user-preferences/', basket_views.save_user_preferences, name='save_user_preferences'),
-    path('basketball/clear-prefs/', basket_views.clear_basket_prefs, name='clear_basket_prefs'),
     path('binder_detail/<int:binder_id>/', basket_views.binder_detail, name='binder_detail'),
     path('search_cards/', basket_views.search_cards, name='search_cards'),
     path('delete-library/', basket_views.toggle_library, name='delete_library'),

@@ -26,11 +26,10 @@ SECRET_KEY = 'django-insecure-0rxz$e)4zs0d(o!mfmg^g=$7_2l2&mrkh%tpv3g4lezv=0_v48
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['mycollection-ebi8.onrender.com', 'localhost', '127.0.0.1']
 
 
 # Application definition
-
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
