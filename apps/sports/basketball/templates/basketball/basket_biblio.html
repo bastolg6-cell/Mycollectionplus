@@ -6,7 +6,7 @@
 <style>
     :root { 
         --unit: 100px;
-        --grid-unit: 20px; /* Taille fixe d'une unité de grille */
+        --grid-unit: 20px; 
         --shelf-wood: #4e342e; 
         --shelf-dark: #1a120b; 
         --board: calc(0.1 * var(--unit)); 
@@ -62,46 +62,37 @@
     
     .library-wall { 
         background: var(--shelf-dark); 
-        /* Encadrement : Planche en haut, à gauche et à droite */
         border-top: var(--board) solid var(--shelf-wood);
         border-left: var(--board) solid var(--shelf-wood);
         border-right: var(--board) solid var(--shelf-wood);
         padding: 0; 
         border-radius: 5px 5px 0 0; 
         display: flex;
-        flex-direction: column;
+        /* Modification : column-reverse pour que l'index 1 soit en bas visuellement */
+        flex-direction: column-reverse; 
         overflow-x: auto;
-        gap: 0; /* Aucune marge entre les étages */
+        gap: 0;
     }
     
     .shelf-row {
         position: relative; 
         display: grid;
-        /* X : Colonnes de 20px */
         grid-template-columns: repeat(var(--cols, 50), var(--grid-unit)); 
-        /* Y : Lignes de 20px */
         grid-template-rows: repeat(var(--rows, 15), var(--grid-unit));
-        
-        /* INDISPENSABLE : Empêche le placement automatique "l'un après l'autre" */
         grid-auto-flow: initial; 
-        /* Aligne le contenu en haut pour que Row 1 soit le haut de l'étagère */
-        align-content: start;
-        
+        align-content: end; 
         padding: 0; 
-        /* Planche horizontale sous chaque étage */
         border-bottom: var(--board) solid var(--shelf-wood);
-        margin-bottom: 0; /* Suppression de la marge de 20px pour coller les planches */
+        margin-bottom: 0;
         transition: background 0.3s ease;
         width: fit-content;
         min-width: 100%;
-        /* Hauteur réelle calculée + box-sizing pour que la planche s'ajoute */
         height: calc(var(--rows) * var(--grid-unit));
         box-sizing: content-box;
     }
     
     .shelf-row:last-child { margin-bottom: 0; }
     
-    /* Grille horizontale et verticale en mode édition */
     .edit-mode-active .shelf-row {
         background-image: 
             linear-gradient(to right, var(--grid-line) 1px, transparent 1px),
@@ -109,7 +100,6 @@
         background-size: var(--grid-unit) var(--grid-unit);
     }
 
-    /* Contrôles d'étage */
     .shelf-controls-overlay {
         position: absolute;
         top: 5px;
@@ -162,15 +152,13 @@
     .btn-add-shelf:hover { color: white; background: rgba(255,255,255,0.1); }
 
     .library-floor {
-        height: var(--board); /* Taille d'une planche */
+        height: var(--board);
         background: var(--shelf-wood);
         width: 100%;
         border-radius: 0 0 5px 5px;
         box-shadow: 0 10px 20px rgba(0,0,0,0.4);
-        /* On retire la bordure top pour ne pas doubler avec la dernière planche d'étage */
     }
     
-    /* Hauteurs d'étages basées sur les unités de grille */
     .size-sm { --rows: 6; }
     .size-md { --rows: 9; }
     .size-lg { --rows: 12; }
@@ -181,19 +169,13 @@
         position: relative; 
         transition: transform 0.2s;
         z-index: 2;
-        
-        /* Placement LIBRE sur la grille via les variables JS */
         grid-column-start: var(--col-start, 1);
-        grid-row-start: var(--row-start, 1);
-        
-        /* Taille de l'objet */
-        grid-column-end: span var(--w, 5);
         grid-row-end: span var(--h, 15);
-        
-        margin: 0; /* Suppression totale des marges pour toucher les planches */
+        grid-row-start: auto; 
+        grid-column-end: span var(--w, 5);
+        margin: 0;
     }
     
-    /* Définition des tailles en unités de grille */
     .binder-small  { --w: 2; --h: 6; }
     .binder-medium { --w: 2; --h: 9; }
     .binder-large  { --w: 2; --h: 12; }
@@ -357,7 +339,7 @@
                 </div>
                 <div class="add-shelf-btn-container d-none edit-mode-ui">
                     <button class="btn-add-shelf" onclick="addShelfToExistingLib('{{ data.instance.id }}')">
-                        <i class="bi bi-plus-circle-fill me-2"></i>Ajouter un étage
+                        <i class="bi bi-plus-circle-fill me-2"></i>Ajouter un étage (bas)
                     </button>
                 </div>
                 <div class="library-floor"></div>
@@ -417,7 +399,7 @@
 <script>
     let isEditMode = false;
     let shelfCounter = 1;
-    const GRID_SIZE = 20; // Doit correspondre à --grid-unit
+    const GRID_SIZE = 20;
 
     function switchView(view) {
         const real = document.getElementById('view-real');
@@ -500,7 +482,9 @@
                 <button class="btn-width-ctrl" onclick="updateShelfWidth('${libId}', '${nextNum}', 10)">+10</button>
                 <button class="btn-remove-shelf" onclick="removeShelf('${libId}', '${nextNum}')"><i class="bi bi-x"></i></button>
             </div>`;
-        wall.appendChild(div);
+        
+        // Modification : Insertion au début (bas du meuble grâce au column-reverse)
+        wall.insertBefore(div, wall.firstChild);
     }
 
     function removeShelf(libId, shelfNum) {
@@ -516,54 +500,41 @@
     function allowDrop(ev) { ev.preventDefault(); }
 
     function drop(ev) {
-    ev.preventDefault();
-    const data = ev.dataTransfer.getData("text");
-    const dragged = document.getElementById(data);
-    // On cherche l'étage (shelf-row), même si on lâche sur un autre classeur
-    const targetRow = ev.target.closest('.shelf-row');
-    
-    // Assure-toi que GRID_SIZE est accessible ici
-    const GRID_SIZE = 20; 
-    
-    if (targetRow && dragged && isEditMode) {
-        dragged.classList.remove('dragging');
-        const rect = targetRow.getBoundingClientRect();
+        ev.preventDefault();
+        const data = ev.dataTransfer.getData("text");
+        const dragged = document.getElementById(data);
+        const targetRow = ev.target.closest('.shelf-row');
         
-        // 1. Calcul de la position relative (ajustée pour centrer un peu le drop)
-        const x = ev.clientX - rect.left;
-        const y = ev.clientY - rect.top;
-        
-        // 2. Conversion en unités de grille (Math.floor + 1 pour index 1-based)
-        let col = Math.floor(x / GRID_SIZE) + 1;
-        let row = Math.floor(y / GRID_SIZE) + 1;
-        
-        // 3. Récupération des dimensions (Lecture directe des variables CSS)
-        const style = window.getComputedStyle(dragged);
-        const w = parseInt(style.getPropertyValue('--w')) || 5;
-        const h = parseInt(style.getPropertyValue('--h')) || 9;
-        
-        // 4. Récupération des limites de l'étage
-        const shelfStyle = window.getComputedStyle(targetRow);
-        const maxCols = parseInt(targetRow.style.getPropertyValue('--cols')) || 50;
-        const maxRows = parseInt(shelfStyle.getPropertyValue('--rows')) || 15;
-        
-        // 5. Contraintes (Bornes) pour ne pas sortir de l'étage
-        col = Math.max(1, Math.min(col, maxCols - w + 1));
-        row = Math.max(1, Math.min(row, maxRows - h + 1));
-        
-        // 6. Application immédiate du style
-        // On force l'écriture dans l'attribut style pour écraser le CSS de base
-        dragged.style.setProperty('--col-start', col);
-        dragged.style.setProperty('--row-start', row);
-        
-        // 7. Mise à jour des datasets pour Django
-        dragged.dataset.col = col;
-        dragged.dataset.row = row;
-        
-        targetRow.appendChild(dragged);
-        
-        console.log(`Placé en X:${col} Y:${row}`); // Pour tes tests en console
-    }
+        if (targetRow && dragged && isEditMode) {
+            dragged.classList.remove('dragging');
+            const rect = targetRow.getBoundingClientRect();
+            
+            const x = ev.clientX - rect.left;
+            const y = ev.clientY - rect.top;
+            
+            const style = window.getComputedStyle(dragged);
+            const w = parseInt(style.getPropertyValue('--w')) || 2;
+            const h = parseInt(style.getPropertyValue('--h')) || 9;
+            
+            const shelfStyle = window.getComputedStyle(targetRow);
+            const maxCols = parseInt(targetRow.style.getPropertyValue('--cols')) || 50;
+            const maxRows = parseInt(shelfStyle.getPropertyValue('--rows')) || 15;
+            
+            let col = Math.floor(x / GRID_SIZE) + 1;
+            let row = Math.floor((rect.height - y) / GRID_SIZE) + 1;
+            
+            col = Math.max(1, Math.min(col, maxCols - w + 1));
+            row = Math.max(1, Math.min(row, maxRows - h + 1));
+            
+            dragged.style.setProperty('--col-start', col);
+            dragged.style.gridRowStart = "auto";
+            dragged.style.gridRowEnd = `span ${h}`;
+            
+            dragged.dataset.col = col;
+            dragged.dataset.row = row;
+            
+            targetRow.appendChild(dragged);
+        }
     }
 
     function saveAllLibraries() {
@@ -572,8 +543,9 @@
             const libId = group.dataset.libId;
             const libConfig = { id: libId, shelf_sizes: {}, shelf_widths: {}, binders: [] };
             
+            // On récupère les lignes dans l'ordre DOM (du bas vers le haut à cause de l'insertion)
             group.querySelectorAll('.shelf-row').forEach((row, index) => {
-                const newNum = index + 1;
+                const newNum = index + 1; // Le premier étage dans le DOM devient l'index 1
                 const size = Array.from(row.classList).find(c => c.startsWith('size-')) || 'size-md';
                 const width = parseInt(row.style.getPropertyValue('--cols')) || 50;
                 
@@ -585,7 +557,7 @@
                         id: binder.dataset.id,
                         shelf: newNum,
                         column: parseInt(binder.dataset.col),
-                        row: parseInt(binder.dataset.row || 1) // Nouvelle donnée Row
+                        row: parseInt(binder.dataset.row || 1)
                     });
                 });
             });

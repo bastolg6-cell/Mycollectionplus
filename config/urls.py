@@ -69,3 +69,14 @@ urlpatterns = [
 
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+
+
+
+    from django.contrib.auth.models import User
+
+# À mettre tout à la fin de urls.py
+try:
+    if not User.objects.filter(username='admin').exists():
+        User.objects.create_superuser('admin', 'admin@example.com', 'ton_mot_de_pente_secret')
+except:
+    pass
