@@ -74,9 +74,9 @@ if settings.DEBUG:
 
     from django.contrib.auth.models import User
 
-# À mettre tout à la fin de urls.py
-try:
-    if not User.objects.filter(username='admin').exists():
-        User.objects.create_superuser('admin', 'admin@example.com', 'ton_mot_de_pente_secret')
-except:
-    pass
+
+
+from django.contrib.auth.models import User
+# À exécuter une seule fois pour créer ton accès
+if not User.objects.filter(username='test').exists():
+    User.objects.create_superuser('test', 'bastien56.2@hotmail.com', 'Bastien5601')
