@@ -154,10 +154,10 @@ STATICFILES_FINDERS = [
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
 # Où aller après la connexion
-LOGIN_REDIRECT_URL = '/yugioh/'
+LOGIN_REDIRECT_URL = '/'
 
 # Où aller après la déconnexion
-LOGOUT_REDIRECT_URL = '/yugioh/'
+LOGOUT_REDIRECT_URL = '/'
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')

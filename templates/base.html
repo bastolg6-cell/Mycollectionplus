@@ -94,7 +94,7 @@
                 Connexion
             </button>
             <div class="dropdown-menu dropdown-menu-end shadow p-4" style="min-width: 250px;">
-                <form method="POST" action="{% url 'login' %}">
+                <form method="POST" action="{% url 'login' %}?next={{ request.path }}">
                     {% csrf_token %}
                     <div class="mb-2">
                         <label class="form-label small fw-bold">Pseudo</label>
